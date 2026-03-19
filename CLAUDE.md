@@ -62,13 +62,14 @@ measurementId: "G-LHH9ETWP7Z"
 - Update this file after every significant change
 - Conventional commit messages
 - Never leave work in a broken state
-- **Network-first no-op service worker** — do NOT cache aggressively on GitHub Pages
+- **Network-first service worker** with push/notification event handlers — do NOT cache aggressively on GitHub Pages
 - **Mobile-first** — design for 375px width, test there first
 - **3-second interaction rule** — slider update must be instant, no extra taps
 - All suggestions are activities, never therapy or behavioral advice
 - Tone: warm, playful, supportive — like a thoughtful friend
 
 ## Recent Changes
+- 2026-03-19: Added local notifications (partner state change, bucket shift, together/apart toggle). Bell icon in header to toggle. Uses browser Notification API + Firebase listeners (no push server needed).
 - 2026-03-19: Project launched. Phase 1 MVP build started.
 
 ## Known Issues

@@ -18,7 +18,10 @@ const DEFAULT_STATE: PartnerState = {
   lastUpdated: Date.now(),
 };
 
-export function usePartnerSync(partnerId: PartnerId | null) {
+export function usePartnerSync(
+  partnerId: PartnerId | null,
+  onPartnerChange?: (state: PartnerState) => void,
+) {
   const [myState, setMyState] = useState<PartnerState>({ ...DEFAULT_STATE });
   const [partnerState, setPartnerState] = useState<PartnerState>({ ...DEFAULT_STATE });
   const [partnerUpdated, setPartnerUpdated] = useState(false);
@@ -50,6 +53,10 @@ export function usePartnerSync(partnerId: PartnerId | null) {
     return () => unsubscribe();
   }, [partnerId]);
 
+  // Stable ref for callback to avoid re-subscribing to Firebase
+  const onPartnerChangeRef = useRef(onPartnerChange);
+  onPartnerChangeRef.current = onPartnerChange;
+
   // Listen to partner's state
   useEffect(() => {
     if (!partnerId) return;
@@ -58,10 +65,12 @@ export function usePartnerSync(partnerId: PartnerId | null) {
     let firstLoad = true;
     const unsubscribe = onValue(partnerRef, (snapshot) => {
       if (snapshot.exists()) {
-        setPartnerState(snapshot.val());
+        const data = snapshot.val();
+        setPartnerState(data);
         if (!firstLoad) {
           setPartnerUpdated(true);
           setTimeout(() => setPartnerUpdated(false), 1500);
+          onPartnerChangeRef.current?.(data);
         }
         firstLoad = false;
       }
