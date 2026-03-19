@@ -40,6 +40,19 @@ function getRec(coupleNet: number, status: TogetherStatus): CommRecommendation {
     ?? { mode: 'Be present', icon: '🌊', message: 'Just breathe. You have each other.' };
 }
 
+function getProximitySuggestion(coupleNet: number, status: TogetherStatus): string | null {
+  if (status === 'mixed') return null;
+  if (status === 'together') {
+    if (coupleNet <= -60) return "🚪 It might be a good time to take some space. Come back when it feels right.";
+    if (coupleNet <= -40) return "🌿 A little space might help right now. Even 20 minutes can reset things.";
+  }
+  if (status === 'apart') {
+    if (coupleNet >= 60) return "✨ You're both in a great place. If there's any way to be together right now, go for it.";
+    if (coupleNet >= 40) return "💫 If you can, try to see each other. No pressure — just if the stars align.";
+  }
+  return null;
+}
+
 function borderColor(coupleNet: number): string {
   if (coupleNet > 30) return 'rgba(232, 114, 122, 0.2)';
   if (coupleNet < -30) return 'rgba(74, 144, 217, 0.2)';
@@ -55,6 +68,7 @@ interface CommModeProps {
 export default function CommMode({ coupleNet, myTogether, partnerTogether }: CommModeProps) {
   const status = getTogetherStatus(myTogether, partnerTogether);
   const { mode, icon, message } = getRec(coupleNet, status);
+  const proximity = getProximitySuggestion(coupleNet, status);
 
   return (
     <div
@@ -73,6 +87,11 @@ export default function CommMode({ coupleNet, myTogether, partnerTogether }: Com
           <p className="text-text-secondary text-sm mt-1.5 leading-relaxed">{message}</p>
         </div>
       </div>
+      {proximity && (
+        <p className="text-text-secondary/70 text-xs italic leading-relaxed mt-4 ml-[3.5rem] transition-opacity duration-500">
+          {proximity}
+        </p>
+      )}
     </div>
   );
 }
