@@ -5,6 +5,7 @@ interface PartnerStateProps {
   state: PartnerStateType;
   partnerId: PartnerId;
   updated: boolean;
+  showUpdateDot?: boolean;
 }
 
 function timeAgo(timestamp: number): string {
@@ -17,12 +18,15 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function PartnerState({ state, partnerId, updated }: PartnerStateProps) {
+export default function PartnerState({ state, partnerId, updated, showUpdateDot }: PartnerStateProps) {
   const name = PARTNER_NAMES[partnerId];
   const feelingPct = state.feeling;
 
   return (
-    <div className={`glass-card p-5 transition-all duration-300 ${updated ? 'animate-gentle-pulse' : ''}`}>
+    <div className={`glass-card p-5 transition-all duration-300 relative ${updated ? 'animate-gentle-pulse' : ''}`}>
+      {showUpdateDot && (
+        <span className="update-dot absolute -top-1 -right-1" />
+      )}
       <div className="flex items-center justify-between mb-4">
         <span className="text-base font-medium text-text-primary">{name}</span>
         <span className="text-xs text-text-secondary/70">updated {timeAgo(state.lastUpdated)}</span>

@@ -4,6 +4,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { usePartnerSync } from '../hooks/usePartnerSync';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useNotifications } from '../hooks/useNotifications';
+import { useUpdateDot } from '../hooks/useUpdateDot';
 import { useAuth } from '../hooks/useAuth';
 import type { PartnerState as PartnerStateType } from '../types';
 import Slider from './Slider';
@@ -18,12 +19,14 @@ export default function Dashboard() {
   const { logout } = useAuth();
   const { enabled, supported, denied, toggle, checkPartnerChange, checkBucketChange } =
     useNotifications(partnerId);
+  const { showDot, markUpdate, clearDot } = useUpdateDot();
 
   const onPartnerChange = useCallback(
     (state: PartnerStateType) => {
       checkPartnerChange(state);
+      markUpdate();
     },
-    [checkPartnerChange]
+    [checkPartnerChange, markUpdate]
   );
 
   const {
@@ -34,6 +37,20 @@ export default function Dashboard() {
     updateSlider,
     toggleTogether,
   } = usePartnerSync(partnerId, onPartnerChange);
+
+  // Wrap slider and toggle to also clear the dot
+  const handleSlider = useCallback(
+    (feeling: number) => {
+      clearDot();
+      updateSlider(feeling);
+    },
+    [clearDot, updateSlider]
+  );
+
+  const handleToggle = useCallback(() => {
+    clearDot();
+    toggleTogether();
+  }, [clearDot, toggleTogether]);
 
   const coupleNet = (myState.feeling - myState.thinking) + (partnerState.feeling - partnerState.thinking);
 
@@ -53,9 +70,12 @@ export default function Dashboard() {
 
       {/* ── Header ── */}
       <header className="flex items-center justify-between px-6 pt-6 pb-3">
-        <h1 className="text-4xl font-semibold italic text-text-primary"
+        <h1 className="text-4xl font-semibold italic text-text-primary relative"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
           Us
+          {showDot && (
+            <span className="update-dot-sm absolute -top-0.5 -right-3" />
+          )}
         </h1>
         <div className="flex items-center gap-1">
           {supported && (
@@ -90,7 +110,7 @@ export default function Dashboard() {
           myState={myState}
           partnerState={partnerState}
           partnerId={otherPartnerId}
-          onToggle={toggleTogether}
+          onToggle={handleToggle}
         />
       </div>
 
@@ -103,7 +123,7 @@ export default function Dashboard() {
         {/* Your Slider */}
         <div className="animate-fade-in stagger-2">
           <p className="section-label mb-3 px-1">Your State</p>
-          <Slider feeling={myState.feeling} onChange={updateSlider} />
+          <Slider feeling={myState.feeling} onChange={handleSlider} />
         </div>
 
         {/* Partner State */}
@@ -113,6 +133,7 @@ export default function Dashboard() {
             state={partnerState}
             partnerId={otherPartnerId}
             updated={partnerUpdated}
+            showUpdateDot={showDot}
           />
         </div>
 
