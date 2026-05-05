@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "couples": {
+      "zev-irit": {
+        ".read": "auth != null && (auth.token.email == 'zev330@gmail.com' || auth.token.email == 'iritfeldmanpsyd@gmail.com')",
+        ".write": "auth != null && (auth.token.email == 'zev330@gmail.com' || auth.token.email == 'iritfeldmanpsyd@gmail.com')",
+        "partners": {
+          "$partnerId": {
+            ".validate": "$partnerId == 'zev' || $partnerId == 'irit'"
+          }
+        },
+        "history": {
+          ".indexOn": ["timestamp"]
+        }
+      }
+    }
+  }
+}

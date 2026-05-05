@@ -4,7 +4,7 @@
 A real-time PWA where two partners each set a Thinking ↔ Feeling slider (always sums to 100%). The app shows both states live, calculates a couple-level net score, and suggests activities based on the combined emotional state. No therapy, no advice — just data and suggestions.
 
 ## Current State
-Phase 1 MVP — initial build. Nothing deployed yet.
+Phase 1 MVP shipped 2026-03-19. Live at https://zev330-lab.github.io/us-app/. Hardcoded single-couple (zev-irit). Marketplace transformation plan in `docs/plans/2026-05-05-us-marketplace-plan.md`.
 
 ## Tech Stack
 - React 18 + Vite + TypeScript
@@ -69,11 +69,21 @@ measurementId: "G-LHH9ETWP7Z"
 - Tone: warm, playful, supportive — like a thoughtful friend
 
 ## Recent Changes
+- 2026-05-05: Discovery audit + marketplace transformation plan saved to `docs/plans/2026-05-05-us-marketplace-plan.md`. Verified live app working (browser-tested, no errors). Firebase rules now source-controlled (`database.rules.json`, `firebase.json`, `.firebaserc`). 3 Tier-3 decisions blocking Phase 0.5: positioning, pricing, domain.
+- 2026-03-19: Added red-dot indicator (`useUpdateDot.ts`) — pings header + partner card when partner moved while you were away.
 - 2026-03-19: Added local notifications (partner state change, bucket shift, together/apart toggle). Bell icon in header to toggle. Uses browser Notification API + Firebase listeners (no push server needed).
-- 2026-03-19: Project launched. Phase 1 MVP build started.
+- 2026-03-19: Phase 1 MVP shipped — slider, real-time sync, couple score, comm mode, suggestions, PWA, deployed to GitHub Pages.
+
+## Source of Truth
+- Next action queue: `docs/NEXT_ACTION.md`
+- Marketplace plan: `docs/plans/2026-05-05-us-marketplace-plan.md`
+- Vault entry: `~/command-center-vault/projects/us-app.md`
 
 ## Known Issues
-None yet — fresh build.
+- Hardcoded `COUPLE_ID = "zev-irit"` and `PARTNER_MAP` (2 emails only) — must be ripped out for marketplace; see Phase 1 in marketplace plan
+- "Make love" suggestion in Deep Connection bucket → 17+ rating mandatory, may need rewrite for App Store
+- History writes unbounded (one row per slider change) — fine for 2 users, needs TTL or aggregation at scale
+- No tests yet — Phase 0.5 is to add Vitest + RTL before any feature work (TaskCompleted hook blocks task completion without tests)
 
 ## What's Next
-Phase 1 MVP: Slider + real-time sync + couple dashboard + suggestions + PWA deploy
+See `docs/NEXT_ACTION.md`. Top of queue: 3 Tier-3 decisions (positioning, pricing, domain), then Phase 0.5 test infra, then Phase 1 multi-tenant rework.
