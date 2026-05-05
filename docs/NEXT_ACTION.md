@@ -16,14 +16,15 @@ Full transformation plan saved at `docs/plans/2026-05-05-us-marketplace-plan.md`
 - Marketplace transformation plan (Phases 0.5 → 6, calendar estimates)
 - Discovery audit: vault entry was 6 weeks stale, now corrected
 
-## Decisions blocking Phase 0.5 (Zev's call)
+## Decisions made 2026-05-05
 
-1. **Positioning** — pick one of three (or write own):
-   - "A dashboard for the two of you. No advice. Just presence."
-   - "Know how your partner is feeling — without asking." *(my pick for marketing)*
-   - "Us is where you check in on each other."
-2. **Pricing structure** — monthly+annual subscription vs $59 lifetime
-3. **Domain name** — register one before Phase 2 (Vercel deploy)
+Recorded in `docs/plans/2026-05-05-positioning-pricing-domain.md`.
+
+1. **Positioning** — *"Know how your partner feels — without asking."*
+2. **Pricing** — Hybrid: Free / $4.99 mo / $29.99 yr / $79 lifetime. One pays, both unlock. 7-day trial.
+3. **Domain** — Primary `heyus.app` (Zev to register on Namecheap, ~$15/yr). Fallbacks: `usthe.app`, `loveus.app`, `getus.app`.
+
+Phase 0.5 starts on next session — no decisions blocking.
 
 ## What's next (in order)
 

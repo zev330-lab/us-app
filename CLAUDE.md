@@ -69,7 +69,8 @@ measurementId: "G-LHH9ETWP7Z"
 - Tone: warm, playful, supportive — like a thoughtful friend
 
 ## Recent Changes
-- 2026-05-05: Discovery audit + marketplace transformation plan saved to `docs/plans/2026-05-05-us-marketplace-plan.md`. Verified live app working (browser-tested, no errors). Firebase rules now source-controlled (`database.rules.json`, `firebase.json`, `.firebaserc`). 3 Tier-3 decisions blocking Phase 0.5: positioning, pricing, domain.
+- 2026-05-05: Positioning + pricing + domain decisions made (Zev delegated). Saved to `docs/plans/2026-05-05-positioning-pricing-domain.md`. Positioning: "Know how your partner feels — without asking." Pricing: Free / $4.99 mo / $29.99 yr / $79 lifetime, one pays both unlock. Domain: heyus.app (primary). Phase 0.5 (test infra) unblocked.
+- 2026-05-05: Discovery audit + marketplace transformation plan saved to `docs/plans/2026-05-05-us-marketplace-plan.md`. Verified live app working (browser-tested, no errors). Firebase rules now source-controlled (`database.rules.json`, `firebase.json`, `.firebaserc`).
 - 2026-03-19: Added red-dot indicator (`useUpdateDot.ts`) — pings header + partner card when partner moved while you were away.
 - 2026-03-19: Added local notifications (partner state change, bucket shift, together/apart toggle). Bell icon in header to toggle. Uses browser Notification API + Firebase listeners (no push server needed).
 - 2026-03-19: Phase 1 MVP shipped — slider, real-time sync, couple score, comm mode, suggestions, PWA, deployed to GitHub Pages.
