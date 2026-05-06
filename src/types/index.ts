@@ -6,20 +6,35 @@ export interface PartnerState {
   lastUpdated: number;
 }
 
-export interface CoupleData {
-  partners: {
-    zev: PartnerState;
-    irit: PartnerState;
-  };
-  history: Record<string, HistoryEntry>;
+export interface UserDoc {
+  email: string;
+  displayName: string;
+  coupleId: string | null;
+  createdAt: number;
+}
+
+export interface CoupleDoc {
+  members: Record<string, true>;
+  createdAt: number;
+  partners: Record<string, PartnerState>;
+  history?: Record<string, HistoryEntry>;
 }
 
 export interface HistoryEntry {
-  zev: { thinking: number; feeling: number };
-  irit: { thinking: number; feeling: number };
+  partners: Record<string, { thinking: number; feeling: number }>;
   coupleNet: number;
-  together: { zev: boolean; irit: boolean };
+  together: Record<string, boolean>;
   timestamp: number;
+}
+
+export interface InviteCodeDoc {
+  coupleId: string;
+  createdBy: string;
+  createdAt: number;
+  expiresAt: number;
+  redeemed: boolean;
+  redeemedBy?: string;
+  redeemedAt?: number;
 }
 
 export interface Suggestion {
@@ -27,17 +42,3 @@ export interface Suggestion {
   emoji: string;
   context: 'together' | 'apart' | 'both';
 }
-
-export type PartnerId = 'zev' | 'irit';
-
-export const PARTNER_MAP: Record<string, PartnerId> = {
-  "zev330@gmail.com": "zev",
-  "iritfeldmanpsyd@gmail.com": "irit"
-};
-
-export const COUPLE_ID = "zev-irit";
-
-export const PARTNER_NAMES: Record<PartnerId, string> = {
-  zev: "Zev",
-  irit: "Irit"
-};

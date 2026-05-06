@@ -34,10 +34,18 @@ Phase 0.5 starts immediately.
 ## What's next (in order)
 
 1. ✅ **Phase 0.5** — done 2026-05-05.
-2. **Phase 1** (~5-7 days) — Multi-tenant data model rework. Strip hardcoded `COUPLE_ID = "zev-irit"` and `PARTNER_MAP`; add Firebase signup; add account-linking via 6-char invite code (24h expiry, single-use); update RTDB rules to member-gate `couples/{cid}` by UID.
+2. ✅ **Phase 1** — done 2026-05-05. Multi-tenant data model, signup flow, account linking via invite code, member-gated rules. Old `couples/zev-irit/` data preserved as archive (no migration); Zev + Irit re-onboard after deploy.
 3. **Phase 2** (~3-4 days) — Register `twoof.us`, deploy to Vercel, ToS/Privacy, account deletion, "not therapy" onboarding screen.
 4. **Phase 3** (~3-5 days) — Stripe Checkout, single SKU $9.99/yr with 7-day trial, per-user UI gating.
 5. **Validation gate**: 10 paying users in 30 days. If hit → Phase 4 (Expo native). If not → reassess.
+
+## ⚠️ Deploy ordering for Phase 1 (one-time)
+
+The new code writes to a new schema (`users/{uid}`, `couples/{cid}`, `inviteCodes/{code}`). When this rolls out:
+
+1. **Code goes live first.** GitHub Pages auto-deploys on push to main. Old (looser) rules accept the new writes temporarily.
+2. **Then deploy stricter rules** via Firebase CLI: `firebase login && firebase deploy --only database` from `~/dev/us-app`. (Needs Zev's hands — Firebase login is interactive.)
+3. **Re-onboard.** Zev + Irit each open the app, sign up fresh (or sign in to existing accounts — bootstrap will create user docs). One picks "I'll send my partner a code"; the other picks "My partner sent me a code." Linked. ~3 minutes.
 
 ## Known issues / risks
 

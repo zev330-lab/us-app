@@ -1,14 +1,13 @@
-import type { PartnerState, PartnerId } from '../types';
-import { PARTNER_NAMES } from '../types';
+import type { PartnerState } from '../types';
 
 interface StatusToggleProps {
   myState: PartnerState;
-  partnerState: PartnerState;
-  partnerId: PartnerId;
+  partnerState: PartnerState | null;
+  partnerName: string;
   onToggle: () => void;
 }
 
-export default function StatusToggle({ myState, partnerState, partnerId, onToggle }: StatusToggleProps) {
+export default function StatusToggle({ myState, partnerState, partnerName, onToggle }: StatusToggleProps) {
   return (
     <div className="flex items-center justify-between">
       {/* Pill toggle */}
@@ -24,7 +23,6 @@ export default function StatusToggle({ myState, partnerState, partnerId, onToggl
             : 'rgba(255, 255, 255, 0.08)',
         }}
       >
-        {/* Sliding pill indicator */}
         <div
           className="absolute top-1 h-8 w-[76px] rounded-full transition-all duration-300 ease-out"
           style={{
@@ -47,12 +45,16 @@ export default function StatusToggle({ myState, partnerState, partnerId, onToggl
       </button>
 
       {/* Partner status */}
-      <div className="flex items-center gap-2">
-        <span className={`w-1.5 h-1.5 rounded-full ${partnerState.together ? 'bg-accent/70' : 'bg-text-secondary/40'}`} />
-        <span className="text-xs text-text-secondary">
-          {PARTNER_NAMES[partnerId]} {partnerState.together ? 'together' : 'apart'}
-        </span>
-      </div>
+      {partnerState ? (
+        <div className="flex items-center gap-2">
+          <span className={`w-1.5 h-1.5 rounded-full ${partnerState.together ? 'bg-accent/70' : 'bg-text-secondary/40'}`} />
+          <span className="text-xs text-text-secondary">
+            {partnerName} {partnerState.together ? 'together' : 'apart'}
+          </span>
+        </div>
+      ) : (
+        <span className="text-xs text-text-secondary/40 italic">unlinked</span>
+      )}
     </div>
   );
 }

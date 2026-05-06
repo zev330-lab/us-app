@@ -1,134 +1,151 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ref, onValue, set, push } from 'firebase/database';
+import { ref, onValue, update, push, serverTimestamp } from 'firebase/database';
 import { db } from '../firebase';
-import type { PartnerId, PartnerState } from '../types';
-import { COUPLE_ID, PARTNER_NAMES } from '../types';
+import type { PartnerState } from '../types';
 
 const DEBOUNCE_MS = 300;
-
-function getOtherPartner(id: PartnerId): PartnerId {
-  return id === 'zev' ? 'irit' : 'zev';
-}
 
 const DEFAULT_STATE: PartnerState = {
   name: '',
   thinking: 50,
   feeling: 50,
   together: true,
-  lastUpdated: Date.now(),
+  lastUpdated: 0,
 };
 
+interface PartnerSyncResult {
+  myState: PartnerState;
+  partnerState: PartnerState | null;
+  partnerUid: string | null;
+  partnerUpdated: boolean;
+  updateSlider: (feeling: number) => void;
+  toggleTogether: () => void;
+}
+
+/**
+ * Realtime sync of the two partners' state for a given couple. The hook
+ * subscribes to couples/{coupleId}/partners; whichever uid is not yours
+ * is the partner. If the partner hasn't joined the couple yet, partnerState
+ * and partnerUid are null.
+ */
 export function usePartnerSync(
-  partnerId: PartnerId | null,
+  coupleId: string,
+  uid: string,
+  displayName: string,
   onPartnerChange?: (state: PartnerState) => void,
-) {
-  const [myState, setMyState] = useState<PartnerState>({ ...DEFAULT_STATE });
-  const [partnerState, setPartnerState] = useState<PartnerState>({ ...DEFAULT_STATE });
+): PartnerSyncResult {
+  const [myState, setMyState] = useState<PartnerState>({ ...DEFAULT_STATE, name: displayName });
+  const [partnerState, setPartnerState] = useState<PartnerState | null>(null);
+  const [partnerUid, setPartnerUid] = useState<string | null>(null);
   const [partnerUpdated, setPartnerUpdated] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initialLoadDone = useRef(false);
 
-  // Listen to my own state
+  // Listen to all partners in the couple; split into self vs. other.
+  const onPartnerChangeRef = useRef(onPartnerChange);
+  onPartnerChangeRef.current = onPartnerChange;
+  const lastPartnerStateRef = useRef<PartnerState | null>(null);
+
   useEffect(() => {
-    if (!partnerId) return;
-    const myRef = ref(db, `couples/${COUPLE_ID}/partners/${partnerId}`);
-    const unsubscribe = onValue(myRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setMyState(data);
+    const partnersRef = ref(db, `couples/${coupleId}/partners`);
+    let firstLoad = true;
+
+    const unsubscribe = onValue(partnersRef, (snapshot) => {
+      const data: Record<string, PartnerState> = snapshot.val() ?? {};
+      const mine = data[uid];
+      const otherUid = Object.keys(data).find((k) => k !== uid) ?? null;
+      const other = otherUid ? data[otherUid] : null;
+
+      if (mine) {
+        setMyState(mine);
       } else {
-        // Initialize if doesn't exist
+        // First-time write: seed defaults so the slider has something to drive.
         const initial: PartnerState = {
-          name: PARTNER_NAMES[partnerId],
+          name: displayName,
           thinking: 50,
           feeling: 50,
           together: true,
           lastUpdated: Date.now(),
         };
-        set(myRef, initial);
+        update(ref(db, `couples/${coupleId}/partners/${uid}`), initial).catch(() => {});
         setMyState(initial);
       }
-      initialLoadDone.current = true;
-    });
-    return () => unsubscribe();
-  }, [partnerId]);
 
-  // Stable ref for callback to avoid re-subscribing to Firebase
-  const onPartnerChangeRef = useRef(onPartnerChange);
-  onPartnerChangeRef.current = onPartnerChange;
+      setPartnerUid(otherUid);
+      setPartnerState(other);
 
-  // Listen to partner's state
-  useEffect(() => {
-    if (!partnerId) return;
-    const otherId = getOtherPartner(partnerId);
-    const partnerRef = ref(db, `couples/${COUPLE_ID}/partners/${otherId}`);
-    let firstLoad = true;
-    const unsubscribe = onValue(partnerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setPartnerState(data);
-        if (!firstLoad) {
+      if (other && !firstLoad) {
+        const prev = lastPartnerStateRef.current;
+        const changed =
+          !prev ||
+          prev.feeling !== other.feeling ||
+          prev.together !== other.together;
+        if (changed) {
           setPartnerUpdated(true);
           setTimeout(() => setPartnerUpdated(false), 1500);
-          onPartnerChangeRef.current?.(data);
+          onPartnerChangeRef.current?.(other);
         }
-        firstLoad = false;
       }
+      lastPartnerStateRef.current = other;
+      firstLoad = false;
     });
+
     return () => unsubscribe();
-  }, [partnerId]);
+  }, [coupleId, uid, displayName]);
 
-  // Update slider value (debounced write to Firebase)
-  const updateSlider = useCallback((feeling: number) => {
-    if (!partnerId) return;
-    const thinking = 100 - feeling;
-    setMyState(prev => ({ ...prev, thinking, feeling }));
+  const updateSlider = useCallback(
+    (feeling: number) => {
+      const thinking = 100 - feeling;
+      setMyState((prev) => ({ ...prev, thinking, feeling }));
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const myRef = ref(db, `couples/${COUPLE_ID}/partners/${partnerId}`);
-      const now = Date.now();
-      set(myRef, {
-        name: PARTNER_NAMES[partnerId],
-        thinking,
-        feeling,
-        together: myState.together,
-        lastUpdated: now,
-      });
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        const now = Date.now();
+        const next: PartnerState = {
+          name: displayName,
+          thinking,
+          feeling,
+          together: myState.together,
+          lastUpdated: now,
+        };
+        update(ref(db, `couples/${coupleId}/partners/${uid}`), next).catch(() => {});
 
-      // Log history
-      const historyRef = ref(db, `couples/${COUPLE_ID}/history`);
-      const otherId = getOtherPartner(partnerId);
-      push(historyRef, {
-        [partnerId]: { thinking, feeling },
-        [otherId]: { thinking: partnerState.thinking, feeling: partnerState.feeling },
-        coupleNet: (feeling - thinking) + (partnerState.feeling - partnerState.thinking),
-        together: { [partnerId]: myState.together, [otherId]: partnerState.together },
-        timestamp: now,
-      });
-    }, DEBOUNCE_MS);
-  }, [partnerId, myState.together, partnerState]);
+        // Append history (best-effort; non-blocking).
+        if (partnerState && partnerUid) {
+          const historyEntry = {
+            partners: {
+              [uid]: { thinking, feeling },
+              [partnerUid]: { thinking: partnerState.thinking, feeling: partnerState.feeling },
+            },
+            coupleNet:
+              feeling - thinking + (partnerState.feeling - partnerState.thinking),
+            together: {
+              [uid]: myState.together,
+              [partnerUid]: partnerState.together,
+            },
+            timestamp: serverTimestamp(),
+          };
+          push(ref(db, `couples/${coupleId}/history`), historyEntry).catch(() => {});
+        }
+      }, DEBOUNCE_MS);
+    },
+    [coupleId, uid, displayName, myState.together, partnerState, partnerUid],
+  );
 
-  // Toggle together/apart
   const toggleTogether = useCallback(() => {
-    if (!partnerId) return;
     const newTogether = !myState.together;
-    setMyState(prev => ({ ...prev, together: newTogether }));
-    const myRef = ref(db, `couples/${COUPLE_ID}/partners/${partnerId}`);
-    set(myRef, {
+    setMyState((prev) => ({ ...prev, together: newTogether }));
+    update(ref(db, `couples/${coupleId}/partners/${uid}`), {
       ...myState,
       together: newTogether,
       lastUpdated: Date.now(),
-    });
-  }, [partnerId, myState]);
-
-  const otherPartnerId = partnerId ? getOtherPartner(partnerId) : null;
+    }).catch(() => {});
+  }, [coupleId, uid, myState]);
 
   return {
     myState,
     partnerState,
+    partnerUid,
     partnerUpdated,
-    otherPartnerId,
     updateSlider,
     toggleTogether,
   };

@@ -1,6 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
-import type { PartnerState, PartnerId } from '../types';
-import { PARTNER_NAMES } from '../types';
+import type { PartnerState } from '../types';
 import { getBucket, BUCKET_LABELS, type Bucket } from '../lib/scoring';
 
 const COOLDOWN_MS = 300_000; // 5 minutes
@@ -24,7 +23,7 @@ function showNotification(title: string, body: string) {
   }
 }
 
-export function useNotifications(partnerId: PartnerId | null) {
+export function useNotifications(partnerName: string) {
   const [enabled, setEnabled] = useState(() => {
     return localStorage.getItem('us-notifications') === 'on';
   });
@@ -34,10 +33,6 @@ export function useNotifications(partnerId: PartnerId | null) {
   const lastNotifyTime = useRef(0);
   const lastBucket = useRef<Bucket | null>(null);
   const initialized = useRef(false);
-
-  const partnerName = partnerId
-    ? PARTNER_NAMES[partnerId === 'zev' ? 'irit' : 'zev']
-    : '';
 
   const requestPermission = useCallback(async () => {
     if (!('Notification' in window)) return false;
@@ -80,7 +75,7 @@ export function useNotifications(partnerId: PartnerId | null) {
 
   const checkPartnerChange = useCallback(
     (partnerState: PartnerState) => {
-      if (!enabled || !partnerId) return;
+      if (!enabled || !partnerName) return;
 
       // Skip the very first data load — don't notify on app open
       if (!initialized.current) {
@@ -127,7 +122,7 @@ export function useNotifications(partnerId: PartnerId | null) {
         }
       }
     },
-    [enabled, partnerId, partnerName]
+    [enabled, partnerName]
   );
 
   const checkBucketChange = useCallback(

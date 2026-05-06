@@ -1,41 +1,67 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
-import type { PartnerId } from '../types';
-import { PARTNER_MAP } from '../types';
+import { ref, onValue, set, serverTimestamp } from 'firebase/database';
+import { auth, db } from '../firebase';
+import type { UserDoc } from '../types';
 
 interface AuthContextType {
   user: User | null;
-  partnerId: PartnerId | null;
+  userDoc: UserDoc | null;
+  coupleId: string | null;
   loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  partnerId: null,
+  userDoc: null,
+  coupleId: null,
   loading: true,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [partnerId, setPartnerId] = useState<PartnerId | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [docLoading, setDocLoading] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    return onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
-      if (firebaseUser?.email) {
-        setPartnerId(PARTNER_MAP[firebaseUser.email] || null);
-      } else {
-        setPartnerId(null);
+      setAuthLoading(false);
+      if (!firebaseUser) {
+        setUserDoc(null);
       }
-      setLoading(false);
     });
-    return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    setDocLoading(true);
+    const userRef = ref(db, `users/${user.uid}`);
+    const unsubscribe = onValue(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setUserDoc(snapshot.val() as UserDoc);
+        setDocLoading(false);
+        return;
+      }
+      // Bootstrap a user doc for legacy auth accounts (created before the
+      // multi-tenant rewrite shipped) so they don't get stranded on a blank
+      // screen. Once the doc is written, this listener fires again with it.
+      set(userRef, {
+        email: user.email ?? '',
+        displayName: user.displayName?.trim() || user.email?.split('@')[0] || 'You',
+        coupleId: null,
+        createdAt: serverTimestamp(),
+      }).catch(() => setDocLoading(false));
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  const loading = authLoading || (!!user && docLoading);
+  const coupleId = userDoc?.coupleId ?? null;
+
   return (
-    <AuthContext.Provider value={{ user, partnerId, loading }}>
+    <AuthContext.Provider value={{ user, userDoc, coupleId, loading }}>
       {children}
     </AuthContext.Provider>
   );

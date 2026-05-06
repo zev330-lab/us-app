@@ -1,9 +1,8 @@
-import type { PartnerState as PartnerStateType, PartnerId } from '../types';
-import { PARTNER_NAMES } from '../types';
+import type { PartnerState as PartnerStateType } from '../types';
 
 interface PartnerStateProps {
   state: PartnerStateType;
-  partnerId: PartnerId;
+  partnerName: string;
   updated: boolean;
   showUpdateDot?: boolean;
 }
@@ -18,8 +17,7 @@ function timeAgo(timestamp: number): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default function PartnerState({ state, partnerId, updated, showUpdateDot }: PartnerStateProps) {
-  const name = PARTNER_NAMES[partnerId];
+export default function PartnerState({ state, partnerName, updated, showUpdateDot }: PartnerStateProps) {
   const feelingPct = state.feeling;
 
   return (
@@ -28,7 +26,7 @@ export default function PartnerState({ state, partnerId, updated, showUpdateDot 
         <span className="update-dot absolute -top-1 -right-1" />
       )}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-base font-medium text-text-primary">{name}</span>
+        <span className="text-base font-medium text-text-primary">{partnerName}</span>
         <span className="text-xs text-text-secondary/70">updated {timeAgo(state.lastUpdated)}</span>
       </div>
 
