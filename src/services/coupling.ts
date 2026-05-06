@@ -1,6 +1,5 @@
 import {
   ref,
-  get,
   update,
   serverTimestamp,
   runTransaction,
@@ -104,13 +103,18 @@ export type RedeemInviteError =
   | 'not_found'
   | 'already_redeemed'
   | 'expired'
-  | 'self_redeem'
-  | 'couple_full';
+  | 'self_redeem';
 
 /**
  * Redeem an invite code on behalf of `uid`. Adds the user to the couple's
  * members and creates their partner subtree. Uses a transaction on the
  * invite-code doc so two simultaneous redemptions can't both succeed.
+ *
+ * Note: we don't enforce a 2-member couple cap client-side. The new rules
+ * intentionally hide `couples/{cid}/members` from non-members (read-gated by
+ * membership), so reading the count before joining would hang on permission-
+ * denied. The single-use invite code is the practical guarantee — a second
+ * code would have to be issued explicitly via regenerateInviteCode.
  */
 export async function redeemInviteCode(
   rawCode: string,
@@ -123,40 +127,38 @@ export async function redeemInviteCode(
   }
 
   const inviteRef = ref(db, `inviteCodes/${code}`);
+
+  let abortReason: 'not_found' | 'already_redeemed' | 'self_redeem' | 'expired' | null = null;
+
   const tx = await runTransaction(inviteRef, (current) => {
-    if (current === null) return current; // doesn't exist
-    if (current.redeemed) return current;
-    if (current.createdBy === uid) return current;
-    if (typeof current.expiresAt === 'number' && current.expiresAt < Date.now()) {
+    if (current === null) {
+      abortReason = 'not_found';
       return current;
     }
+    if (current.createdBy === uid) {
+      abortReason = 'self_redeem';
+      return current;
+    }
+    if (current.redeemed) {
+      abortReason = 'already_redeemed';
+      return current;
+    }
+    if (typeof current.expiresAt === 'number' && current.expiresAt < Date.now()) {
+      abortReason = 'expired';
+      return current;
+    }
+    abortReason = null;
     current.redeemed = true;
     current.redeemedBy = uid;
     current.redeemedAt = Date.now();
     return current;
   });
 
-  if (!tx.committed || !tx.snapshot.exists()) {
-    return { error: 'not_found' };
-  }
+  if (abortReason) return { error: abortReason };
+  if (!tx.committed || !tx.snapshot.exists()) return { error: 'not_found' };
 
   const after = tx.snapshot.val();
-  if (after.createdBy === uid) return { error: 'self_redeem' };
-  if (typeof after.expiresAt === 'number' && after.expiresAt < Date.now() && after.redeemedBy !== uid) {
-    return { error: 'expired' };
-  }
-  if (after.redeemedBy !== uid) {
-    return { error: 'already_redeemed' };
-  }
-
   const coupleId: string = after.coupleId;
-
-  // Sanity-check we're not joining a couple that already has 2 members.
-  const membersSnap = await get(ref(db, `couples/${coupleId}/members`));
-  const existingMembers: Record<string, true> = membersSnap.val() ?? {};
-  if (Object.keys(existingMembers).length >= 2 && !existingMembers[uid]) {
-    return { error: 'couple_full' };
-  }
 
   const now = Date.now();
   const partner: PartnerState = {
