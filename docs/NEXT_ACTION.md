@@ -39,13 +39,12 @@ Phase 0.5 starts immediately.
 4. **Phase 3** (~3-5 days) — Stripe Checkout, single SKU $9.99/yr with 7-day trial, per-user UI gating.
 5. **Validation gate**: 10 paying users in 30 days. If hit → Phase 4 (Expo native). If not → reassess.
 
-## ⚠️ Deploy ordering for Phase 1 (one-time)
+## Phase 1 deploy state (as of 2026-05-05)
 
-The new code writes to a new schema (`users/{uid}`, `couples/{cid}`, `inviteCodes/{code}`). When this rolls out:
-
-1. **Code goes live first.** GitHub Pages auto-deploys on push to main. Old (looser) rules accept the new writes temporarily.
-2. **Then deploy stricter rules** via Firebase CLI: `firebase login && firebase deploy --only database` from `~/dev/us-app`. (Needs Zev's hands — Firebase login is interactive.)
-3. **Re-onboard.** Zev + Irit each open the app, sign up fresh (or sign in to existing accounts — bootstrap will create user docs). One picks "I'll send my partner a code"; the other picks "My partner sent me a code." Linked. ~3 minutes.
+- ✅ Code live at https://zev330-lab.github.io/us-app/ (commit `cab3ae9`)
+- ✅ Firebase rules deployed (member-gated couples, self-only users) — pushed via REST API with gcloud token
+- ✅ A test couple exists for Zev with active invite code (UnlinkedBanner shows it). Code expires 24h from generation; Zev can regenerate from Dashboard
+- ✅ Old `couples/zev-irit/` data preserved as archive (rules now block Zev/Irit from reading it; intentional)
 
 ## Known issues / risks
 
