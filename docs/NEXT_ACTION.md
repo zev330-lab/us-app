@@ -12,9 +12,13 @@ Full transformation plan saved at `docs/plans/2026-05-05-us-marketplace-plan.md`
 
 ## What shipped today (2026-05-05)
 
-- `database.rules.json` + `firebase.json` + `.firebaserc` — Firebase rules now source-controlled; deploy with `firebase deploy --only database` if rules ever drift
+- `database.rules.json` + `firebase.json` + `.firebaserc` — Firebase rules now source-controlled
 - Marketplace transformation plan (Phases 0.5 → 6, calendar estimates)
-- Discovery audit: vault entry was 6 weeks stale, now corrected
+- Positioning/pricing/domain locked: `twoof.us` + $9.99/yr per user + "Know how your partner feels — without asking."
+- **Phase 0.5 complete**: Vitest + RTL + jsdom installed; 29 tests passing covering score math, bucket boundaries, suggestion content, comm mode lookups, proximity nudges
+- Extracted shared lib: `src/lib/scoring.ts` (was duplicated in 3 files), `src/lib/commMode.ts` (was inlined)
+- Fixed bug: `coupleNet > 100` or `< -100` was falling through to "balanced" suggestions instead of matching the deep/space bucket
+- App Review prep: rewrote "Make love" → "Be physical" and "Run a bath together" → "Take a long bath together"; added regex test that fails if banned sexual terms reappear
 
 ## Decisions made 2026-05-05 (locked)
 
@@ -29,11 +33,11 @@ Phase 0.5 starts immediately.
 
 ## What's next (in order)
 
-1. **Phase 0.5** (~2 days) — Vitest + React Testing Library + tests for score math, bucket boundaries, suggestion filtering. Required by global CLAUDE.md TaskCompleted hook.
-2. **Phase 1** (~5-7 days) — Multi-tenant data model rework. Strip hardcoded `COUPLE_ID = "zev-irit"` and `PARTNER_MAP`; add signup + couple-pairing flow.
-3. **Phase 2** (~3-4 days) — Custom domain, Vercel migration, ToS/Privacy, account deletion, "not therapy" onboarding.
-4. **Phase 3** (~3-5 days) — Stripe Checkout, free vs Together tier, couple-shared entitlement.
-5. **Validation gate**: 10 paying couples in 30 days. If hit → Phase 4 (Expo native). If not → reassess.
+1. ✅ **Phase 0.5** — done 2026-05-05.
+2. **Phase 1** (~5-7 days) — Multi-tenant data model rework. Strip hardcoded `COUPLE_ID = "zev-irit"` and `PARTNER_MAP`; add Firebase signup; add account-linking via 6-char invite code (24h expiry, single-use); update RTDB rules to member-gate `couples/{cid}` by UID.
+3. **Phase 2** (~3-4 days) — Register `twoof.us`, deploy to Vercel, ToS/Privacy, account deletion, "not therapy" onboarding screen.
+4. **Phase 3** (~3-5 days) — Stripe Checkout, single SKU $9.99/yr with 7-day trial, per-user UI gating.
+5. **Validation gate**: 10 paying users in 30 days. If hit → Phase 4 (Expo native). If not → reassess.
 
 ## Known issues / risks
 

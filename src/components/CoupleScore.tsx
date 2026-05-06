@@ -1,5 +1,6 @@
 import type { PartnerState, PartnerId } from '../types';
 import { PARTNER_NAMES } from '../types';
+import { getBucket, BUCKET_LABELS } from '../lib/scoring';
 
 interface CoupleScoreProps {
   myState: PartnerState;
@@ -8,19 +9,11 @@ interface CoupleScoreProps {
   partnerId: PartnerId;
 }
 
-function getLabel(score: number): { label: string; emoji: string; color: string } {
-  if (score >= 60) return { label: 'Deep Connection', emoji: '💕', color: '#E8727A' };
-  if (score >= 20) return { label: 'Feeling Good', emoji: '✨', color: '#E8727A' };
-  if (score >= -19) return { label: 'Balanced', emoji: '🌊', color: '#C9A96E' };
-  if (score >= -59) return { label: 'Thinking Mode', emoji: '🤔', color: '#4A90D9' };
-  return { label: 'Heavy Thinking', emoji: '💭', color: '#4A90D9' };
-}
-
 export default function CoupleScore({ myState, partnerState, myId, partnerId }: CoupleScoreProps) {
   const mySurplus = myState.feeling - myState.thinking;
   const partnerSurplus = partnerState.feeling - partnerState.thinking;
   const coupleNet = mySurplus + partnerSurplus;
-  const { label, emoji, color } = getLabel(coupleNet);
+  const { label, emoji, color } = BUCKET_LABELS[getBucket(coupleNet)];
 
   // Map coupleNet from [-200, 200] to [0, 100] for the gauge
   const gaugePosition = ((coupleNet + 200) / 400) * 100;

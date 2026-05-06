@@ -28,13 +28,6 @@ export interface Suggestion {
   context: 'together' | 'apart' | 'both';
 }
 
-export interface SuggestionBucket {
-  min: number;
-  max: number;
-  label: string;
-  suggestions: Suggestion[];
-}
-
 export type PartnerId = 'zev' | 'irit';
 
 export const PARTNER_MAP: Record<string, PartnerId> = {

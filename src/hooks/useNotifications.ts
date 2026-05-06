@@ -1,27 +1,10 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import type { PartnerState, PartnerId } from '../types';
 import { PARTNER_NAMES } from '../types';
+import { getBucket, BUCKET_LABELS, type Bucket } from '../lib/scoring';
 
 const COOLDOWN_MS = 300_000; // 5 minutes
 const SLIDER_THRESHOLD = 10; // minimum slider change to trigger notification
-
-type BucketKey = 'deep' | 'warm' | 'balanced' | 'gentle' | 'space';
-
-const BUCKET_LABELS: Record<BucketKey, string> = {
-  deep: 'Deep Connection',
-  warm: 'Feeling Good',
-  balanced: 'Balanced',
-  gentle: 'Thinking Mode',
-  space: 'Heavy Thinking',
-};
-
-function getBucket(net: number): BucketKey {
-  if (net >= 60) return 'deep';
-  if (net >= 20) return 'warm';
-  if (net >= -19) return 'balanced';
-  if (net >= -59) return 'gentle';
-  return 'space';
-}
 
 function getCommSuggestion(coupleNet: number): string {
   if (coupleNet >= 60) return 'Talk face to face';
@@ -49,7 +32,7 @@ export function useNotifications(partnerId: PartnerId | null) {
   const lastNotifiedFeeling = useRef<number | null>(null);
   const lastNotifiedTogether = useRef<boolean | null>(null);
   const lastNotifyTime = useRef(0);
-  const lastBucket = useRef<BucketKey | null>(null);
+  const lastBucket = useRef<Bucket | null>(null);
   const initialized = useRef(false);
 
   const partnerName = partnerId
@@ -161,7 +144,7 @@ export function useNotifications(partnerId: PartnerId | null) {
       if (newBucket !== lastBucket.current && document.hidden) {
         showNotification(
           'Us',
-          `${BUCKET_LABELS[newBucket]} — ${getCommSuggestion(coupleNet)}`
+          `${BUCKET_LABELS[newBucket].label} — ${getCommSuggestion(coupleNet)}`
         );
         lastBucket.current = newBucket;
       } else {

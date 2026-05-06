@@ -1,5 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { suggestionBuckets } from '../data/suggestions';
+import { suggestionsByBucket } from '../data/suggestions';
+import { getBucket } from '../lib/scoring';
+
 function shuffle<T>(arr: T[]): T[] {
   const shuffled = [...arr];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -12,14 +14,11 @@ function shuffle<T>(arr: T[]): T[] {
 export function useSuggestions(coupleNet: number, bothTogether: boolean) {
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const bucket = useMemo(() => {
-    return suggestionBuckets.find(b => coupleNet >= b.min && coupleNet <= b.max)
-      || suggestionBuckets[2]; // fallback to balanced
-  }, [coupleNet]);
+  const bucket = useMemo(() => getBucket(coupleNet), [coupleNet]);
 
   const suggestions = useMemo(() => {
-    // Filter by context
-    const filtered = bucket.suggestions.filter(s => {
+    const all = suggestionsByBucket[bucket];
+    const filtered = all.filter(s => {
       if (bothTogether) {
         return s.context === 'together' || s.context === 'both';
       } else {
@@ -34,5 +33,5 @@ export function useSuggestions(coupleNet: number, bothTogether: boolean) {
     setRefreshKey(k => k + 1);
   }, []);
 
-  return { suggestions, bucketLabel: bucket.label, refresh };
+  return { suggestions, bucket, refresh };
 }
