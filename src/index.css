@@ -16,11 +16,9 @@
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* Tailwind 4's preflight already normalizes margin/padding/box-sizing.
+   Adding our own `* { margin: 0 }` here wins over @layer utilities and
+   silently breaks mx-auto, mt-*, etc. — DON'T re-add it. */
 
 html, body, #root {
   height: 100%;
@@ -199,4 +197,19 @@ input[type="range"]:active::-moz-range-thumb {
 /* ── Tabular numbers ── */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Chrome autofill override ──
+   Without this, autofilled inputs get a white/lavender background that
+   clashes with the dark glass card. The 5000s transition is the standard
+   workaround — there's no real CSS to disable autofill colors directly. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text-primary) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset !important;
+  caret-color: var(--color-text-primary) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  border-radius: 1rem;
 }

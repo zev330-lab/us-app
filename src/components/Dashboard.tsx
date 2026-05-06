@@ -81,8 +81,9 @@ export default function Dashboard() {
   const { suggestions, refresh } = useSuggestions(coupleNet, bothTogether);
 
   return (
-    <div className="min-h-screen flex flex-col"
+    <div className="min-h-screen"
          style={{ background: 'linear-gradient(165deg, #0F0F1E 0%, #1A1A2E 40%, #16213E 100%)' }}>
+    <div className="max-w-md mx-auto min-h-screen flex flex-col">
 
       <header className="flex items-center justify-between px-6 pt-6 pb-3">
         <h1 className="text-4xl font-semibold italic text-text-primary relative"
@@ -175,6 +176,7 @@ export default function Dashboard() {
           <div className="w-1.5 h-1.5 rounded-full bg-feeling" />
         </div>
       </div>
+    </div>
     </div>
   );
 }
