@@ -38,22 +38,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     setDocLoading(true);
     const userRef = ref(db, `users/${user.uid}`);
-    const unsubscribe = onValue(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setUserDoc(snapshot.val() as UserDoc);
+    const unsubscribe = onValue(
+      userRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setUserDoc(snapshot.val() as UserDoc);
+          setDocLoading(false);
+          return;
+        }
+        // Bootstrap a user doc for legacy auth accounts (created before the
+        // multi-tenant rewrite shipped) so they don't get stranded on a blank
+        // screen. Once the doc is written, this listener fires again with it.
+        set(userRef, {
+          email: user.email ?? '',
+          displayName: user.displayName?.trim() || user.email?.split('@')[0] || 'You',
+          coupleId: null,
+          createdAt: serverTimestamp(),
+        }).catch(() => setDocLoading(false));
+      },
+      (error) => {
+        // Permission denied or network error: stop spinning, surface as null doc
+        // so App.tsx can route to Pair (which has its own re-auth fallback).
+        console.warn('[Us] users/{uid} read failed:', error.message);
+        setUserDoc(null);
         setDocLoading(false);
-        return;
-      }
-      // Bootstrap a user doc for legacy auth accounts (created before the
-      // multi-tenant rewrite shipped) so they don't get stranded on a blank
-      // screen. Once the doc is written, this listener fires again with it.
-      set(userRef, {
-        email: user.email ?? '',
-        displayName: user.displayName?.trim() || user.email?.split('@')[0] || 'You',
-        coupleId: null,
-        createdAt: serverTimestamp(),
-      }).catch(() => setDocLoading(false));
-    });
+      },
+    );
     return () => unsubscribe();
   }, [user]);
 
