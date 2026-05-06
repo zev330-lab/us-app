@@ -1,6 +1,6 @@
 # Decisions: Positioning, Pricing, Domain
 
-> Decided 2026-05-05. Made by Claude per Zev's "you have a good sense of this — make these decisions" directive. Reverse if/when Zev disagrees.
+> Decided 2026-05-05. Domain pick reversed once (Zev rejected `heyus.app`); pricing model revised once (Zev shifted from couple-shared to per-user).
 
 ---
 
@@ -9,14 +9,14 @@
 | Decision | Pick |
 |---|---|
 | **Positioning** | "Know how your partner feels — without asking." |
-| **Pricing** | Hybrid: Free → $4.99/mo or $29.99/yr (Together) → $79 lifetime. One partner pays, both unlock. 7-day free trial. |
-| **Domain** | Primary: `heyus.app`. Fallbacks: `usthe.app`, `loveus.app`, `getus.app`. |
+| **Pricing** | 7-day free trial → auto-renews to $9.99/year. Each partner subscribes individually. No monthly, no lifetime, no permanent free tier. |
+| **Domain** | `twoof.us` — reads as "two of us" |
 
 ---
 
 ## Positioning: "Know how your partner feels — without asking."
 
-### The decision
+(Unchanged from initial decision.)
 
 - **App Store subtitle (30 chars):** *"How your partner feels. Live."*
 - **App Store promotional text:** "A real-time emotional dashboard for couples. Slide. See each other. Know when to talk, when to text, when to just be."
@@ -25,15 +25,16 @@
 
 ### Frameworks applied
 
-**JTBD (Jobs-to-be-Done):** the killer job is "skip the question 'how are you?'" — both partners hate the chore-question, the slider replaces it with a glanceable signal. The tagline names the job directly.
+**JTBD:** the killer job is "skip the question 'how are you?'" — both partners hate the chore-question, the slider replaces it with a glanceable signal. The tagline names the job directly.
 
 **Category claim:** Us is **not** therapy (Lasting, Talkspace), **not** prompts/games (Paired), **not** memory-keeping (Between), **not** location (Lookus). It's a new category — *ambient emotional awareness for couples*. Closest analogy: Find My Friends + Slack status, but emotional. The tagline implies this without saying it.
 
-**Mimetic check:** I scanned how Paired ("the app that brings couples closer"), Lasting (therapy framing), Between ("memory keeping") position themselves. Every relationship app uses the same vague "deeper connection" promise. Picking a benefit-led, mechanism-implying line *differentiates*. "Without asking" is the unique part — competitors can't claim it.
+**Mimetic check:** every relationship app uses the same vague "deeper connection" promise (Paired, Lasting). Picking a benefit-led, mechanism-implying line *differentiates*. "Without asking" is the unique part — competitors can't claim it.
 
 **Indie B2C App Store reality:** functional taglines convert better than emotional ones in App Store search. The line includes "partner" + "feels" — both keywords couples search for.
 
-**Why this beat the other two finalists:**
+### Why this beat the other two finalists
+
 - "A dashboard for the two of you. No advice. Just presence." — too abstract, no benefit, makes it sound like a feature rather than a product.
 - "Us is where you check in on each other." — "check in" is corporate-speak; loses the emotional intimacy.
 
@@ -45,128 +46,137 @@
 
 ---
 
-## Pricing: Hybrid (subscription lead, lifetime fallback)
+## Pricing: $9.99/year per user, 7-day trial, no free tier (revised 2026-05-05 by Zev)
 
 ### The decision
 
-| Tier | Price | What's in it |
-|---|---|---|
-| **Free** | — | Slider + partner visibility + couple score + together/apart toggle + 24h history + 1 suggestion |
-| **Together (monthly)** | $4.99/mo | Everything below |
-| **Together (annual)** | $29.99/yr (50% off monthly equivalent) | Full suggestions deck, comm mode, push notifications, full history, customization |
-| **Together Lifetime** | $79 one-time | Same as Together, forever, supports indie dev framing |
+- **Trial:** 7 days free on signup. Card-on-file required (App Store / Stripe pattern).
+- **Auto-renewal price:** **$9.99/year per user.**
+- **Each partner subscribes individually.** Bound to Firebase Auth UID, not couple ID.
+- **No monthly tier. No lifetime tier. No permanent free tier after trial.**
+- **Subscription gates the UI per user**, not per couple. If your sub lapses, you see "Renew to reconnect"; your partner's experience is unaffected as long as theirs is active.
 
-- **One partner pays → both unlock.** Subscription bound to `coupleId`, not user.
-- **7-day free trial** of Together on signup. Industry default for this category.
-- Lifetime priced at **2.6x annual** (within RevenueCat's 2.5-4x guideline).
+### Why this differs from my first proposal
 
-### Frameworks applied
+My first proposal was hybrid (Free / $4.99 mo / $29.99 yr / $79 lifetime, one-pays-couple-unlocks). Zev revised to single SKU, per-user, $9.99/yr. The revision is the right call:
 
-**Competitive landscape (from research):**
+| My v1 | Zev's v2 (final) |
+|---|---|
+| 4 SKUs (free, monthly, annual, lifetime) | 1 SKU (annual) |
+| Couple-bound entitlement (RevenueCat shared) | Per-user entitlement (standard) |
+| Single payer — friction-free for couples | Two payers — but $9.99 is below pain threshold |
+| Conventional couples-app pattern | Unconventional but operationally simpler |
+| ~$30/yr revenue ceiling per couple | ~$20/yr revenue ceiling per couple, BUT removes the "engaged partner subsidizes the disengaged one" dynamic |
 
-| App | Model | Price |
-|---|---|---|
-| Lasting | Subscription | $39.99/mo (therapy-adjacent, premium) |
-| Paired | Subscription | ~$15/mo |
-| Between | Hybrid | $13.99/yr or $26.99 lifetime (low-end, retention play) |
-| CustodyLog (yours) | One-time IAP | $9.99 (acute-pain, one-shot use) |
+### Trade-offs accepted
 
-**Sweet spot:** Below Paired's $15/mo (we're a slider, not therapy — must price like utility, not service). Above Between's $13.99/yr (we offer real-time + push, more value than memory storage).
+**Pro:**
+- $9.99/year is below the "do I really need this?" threshold for almost any English-speaking couple. Below the price of one date-night drink.
+- Per-user billing is operationally simple. No couple-shared entitlement webhook gymnastics. Stripe customer per user, IAP transaction per user.
+- Removes the "engaged partner pays for disengaged partner" subsidy — both have skin in the game.
+- If both convert, **revenue per couple is $19.98/yr** — higher than the conventional one-pays-shared $14.99/yr typical in this category.
+- Cancellation isn't catastrophic: if one partner lets it lapse, the other still works. Per-user gating means *your* subscription = *your* access.
 
-**Why subscription-led, not pure-CustodyLog model:**
-- CustodyLog's user is in an acute-pain situation with a one-time deliverable (PDF for attorney). Pay once, get the artifact, done. That's why $9.99 lifetime works.
-- Us is a daily relationship-maintenance touchpoint. Recurring use justifies recurring revenue. Subscription compounds: $4.99/mo × 24 months = $120, vs. $9.99 once. The product *is* a relationship; the pricing should be too.
+**Con:**
+- Conventional wisdom in couples apps says one-pays-both-unlock has higher conversion (Lasting, Paired, Between all do this). We're betting against the convention.
+- Mitigation: $9.99/yr is so low it removes the friction the convention exists to avoid.
+- Risk: trial-to-paid conversion drops if the "less engaged" partner doesn't convert. Watch this in Phase 3.
 
-**Why include lifetime anyway:**
-- 2026 subscription fatigue is real (search results show this trend).
-- Lifetime captures the segment that rejects subscriptions on principle (~6% growth segment).
-- Hybrid models grow revenue 20-40% by capturing different psychographics.
-- Lifetime is *also* viral — "we got the couples lifetime plan" is share-worthy in a way "we have a subscription" isn't.
+### Free tier behavior — explicit
 
-**Why one-pays-couple-unlocks (not both-pay):**
-- Couples products with both-pay friction die at signup.
-- The norm in this category (Lasting, Paired, Relish, Between) is solo-pay-shared-unlock.
-- Bind subscription to `coupleId` server-side. Frontend reads `couples/{cid}/subscription.status`.
+**No persistent free tier.** After the 7-day trial, both partners must have active subscriptions to use the app. Lapsed user sees a "Renew" screen. The non-lapsed partner still sees their own slider but the partner-state card shows "[Name] hasn't renewed."
 
-**Why 7-day trial (not 14, not 0):**
-- 7 days is App Store standard, RevenueCat default, and gives both partners time to install + try.
-- 14 days has higher cancel rate before charge.
-- No trial = lower conversion in this category.
+This is more aggressive than typical freemium. The bet: $9.99/yr is low enough to convert.
+
+**Alternative we considered and rejected:** persistent free tier with paywalled features (notifications, suggestions, comm mode, history). Rejected because it adds gating logic complexity for marginal conversion benefit at this price point.
+
+### Account linking flow
+
+(Renamed from "couple pairing" to match Zev's terminology — same mechanic.)
+
+1. **Signup**: standard email/password (or Apple/Google). Each partner signs up independently.
+2. **Trial starts**: 7-day window begins on signup.
+3. **Linking**: from Settings → "Link your partner." Creates a 6-character invite code, 24h expiry.
+4. **Partner enters code**: from their account → Settings → "Enter partner code." Server links the two UIDs into a `couples/{cid}` record where `cid = sortedConcat(uidA, uidB)` or new UUID.
+5. **Once linked**: both partners' sliders write to `couples/{cid}/partners/{uid}` and they see each other.
+6. **Unlinking**: rare path; needed for breakups. Server keeps history but stops syncing.
+
+**Edge case — pre-link state:** newly signed-up user with no partner linked → trial still runs, slider works, but partner card shows "Send a code to link your partner." App Review will test this.
 
 ### What this commits us to
 
-- Phase 3 (web) builds Stripe Checkout with these three SKUs.
-- Phase 4 (native) builds RevenueCat with matching SKUs (StoreKit/Google Play).
-- Free tier must be useful enough that both partners actually install (network effect drives premium conversion later).
-- Pricing is testable; if we're at $0 conversion at $4.99/mo after 30 paying-couple validation, drop to $3.99 or rethink the offer.
+- Phase 3 (Stripe Checkout) ships exactly one SKU: $9.99/yr with 7-day trial.
+- Phase 4 (Expo native) does the same via App Store IAP / Google Play.
+- Linking flow is Phase 1, *independent of payment*.
+- Subscription state lives on `users/{uid}.subscription`, not on `couples/{cid}`.
+- Backend rule: only check `users/{uid}.subscription.status === "active"` when gating that user's UI.
 
 ### Pricing alternatives I considered and rejected
 
 | Alternative | Why rejected |
 |---|---|
-| Pure CustodyLog clone ($9.99 one-time) | Undermonetized for daily-use product; no recurring justification. |
-| $14.99/mo (match Paired) | Too aggressive for a slider; therapy apps justify $15+, we don't. |
-| Free with ads | Kills trust in an emotional product. |
-| $59 lifetime only (no subscription) | Eliminates trial-to-sub conversion, your strongest path to revenue. |
-| Couple-pays $9.99/mo (both pay) | Friction kills couples-app conversion; unprecedented in category. |
+| Hybrid (my v1) | Zev simplified — one SKU is cleaner |
+| $9.99/mo | 12x more expensive over 1yr — kills conversion at trial end |
+| $29/yr | Above the impulse-buy threshold; conversion drops |
+| Free tier + premium tier | Adds gating logic for marginal benefit at $9.99 price |
+| Lifetime $59 one-time | Kills recurring revenue; the product is daily-use, justifies recurring |
+| Couple shared at $14.99/yr | Operationally complex for similar revenue |
 
 ---
 
-## Domain: `heyus.app` (primary)
+## Domain: `twoof.us`
 
 ### The decision
 
-**Primary:** `heyus.app`
-**Fallbacks (in order):** `usthe.app`, `loveus.app`, `getus.app`
+**Domain:** `twoof.us` — reads as "two of us"
 
-### Availability check (2026-05-05)
+### Why this beat `heyus.app` (initial pick, rejected by Zev)
 
-DNS probe results (`dig +short`):
-- `heyus.app` → no DNS records → **likely available**
-- `usthe.app` → no DNS records → **likely available**
-- `loveus.app` → no DNS records → **likely available**
-- `getus.app` → resolves to Azure IP (could be parking; check WHOIS at registrar)
-- `usapp.io`, `us-app.com`, `useus.com`, `withus.app`, `tryus.app`, `twoofus.app`, `justus.app`, `weus.app`, `onlyus.app`, `forus.app` → all taken
+- `heyus` was a casual greeting — "hey us" sounds like a tech startup pitch deck. `twoof.us` is the couple's actual self-reference.
+- The TLD trick: `.us` literally completes the brand statement. The URL IS the brand.
+- Cultural anchor: Beatles' "Two of Us" gives free recognition.
+- App Store name stays "Us"; domain is the *expanded* brand. Two layers of identity: short brand ("Us") + memorable URL ("two of us").
 
-Verify at Namecheap/Porkbun before purchase — DNS-empty is a strong signal but not definitive.
+### Confirmed available 2026-05-05 via WHOIS no-match
 
-### Why `heyus.app`
+Backups (also confirmed available, in priority order):
+1. `alongside.us` — "alongside us, always" (long, but tagline-y)
+2. `stay.us` — short, warm, but slightly off-grammar
+3. `twousapp.com` — bland but if .us TLD is not desired
 
-- **Brandable**: "Hey us" is the casual greeting a couple says to each other; it's the product talking back to them.
-- **Speakable**: "I'll add it on hey-us-dot-app" — works in conversation. (Compare: "us-app-dot-io" — awkward.)
-- **Typeable**: 9 chars, no hyphens, no numbers, no homophones.
-- **.app TLD**: Google-owned, HTTPS-required by spec (good for trust + PWA install). `.com` would be ideal but couple-themed `.com` are exhausted.
-- **Matches voice**: the app voice in CLAUDE.md is "warm, playful, supportive — like a thoughtful friend." `heyus` lands there. `getus` is too imperative; `usapp` is too literal.
+### Availability check details (from sweep)
+
+WHOIS reports both `.app` and `.com` for most "us"-related candidates as registered. The .us cTLD opens up wordplay because .us domains are often parked but not squatted aggressively. Sweep also surfaced these as TAKEN: `together.app`, `tether.app`, `feelus.app`, `seeus.app`, `theus.app`, `inus.app`, `twoofus.com`, `usapp.io`, `us-app.com`, `useus.com`, `weus.app`, plus most generic couples words (`duet.app`, `duo.app`, `tandem.app`, `coupled.app`, `closer.app`).
+
+Special cases: `we.us` and `hi.us` are reserved by the .us registry (`*.us Reserve Account`) — not registerable normally.
+
+### Costs and registration plan
+
+- Register on Namecheap or Porkbun: $15-25/year for .us TLD
+- Use Cloudflare for DNS (free tier)
+- Email: `hello@twoof.us` via Cloudflare Email Routing → Gmail (free)
+- WHOIS privacy: included on Namecheap; required for `.us` (which historically had public WHOIS)
 
 ### What this commits us to
 
-- Phase 2 (public PWA) registers `heyus.app` (~$15/year on Namecheap, $20 on Google Domains).
-- Email at `hello@heyus.app` for support and ToS contact.
-- App Store name stays "Us" (clean, brandable). Domain is the website.
-- Avoid trademark conflicts: search USPTO TESS for "us" relationship-app trademarks before App Store submission. (Likely fine — "Us" is too generic to trademark in this category.)
-
-### Why I rejected the alternatives
-
-- `getus.app` — too imperative, sounds transactional; might be parked but uncertain.
-- `usapp.io` — taken, and `.io` is more dev-tool than B2C consumer.
-- `us-app.com` — hyphens kill brand recall; also taken.
-- `loveus.app` — over-promises ("love"); sounds desperate.
-- `usthe.app` — odd word order; "us, the app" works in tagline but not URL.
+- App Store name stays "Us"; marketing/website is "twoof.us" (the URL spells the relationship).
+- Logo on the marketing site can play with the wordplay: "two of [Us]" with "Us" stylized.
+- Domain registered before Phase 2 (public PWA migration).
 
 ---
 
 ## What unlocks now
 
-With these decisions made, **Phase 0.5 (test infrastructure) starts immediately on next session**. No more Tier-3 blockers.
+All Tier-3 decisions made. **Phase 0.5 (test infrastructure) starts immediately.** No more Tier-3 blockers.
 
 Phase order:
-1. Phase 0.5 — Vitest + tests for score math, bucket boundaries, suggestion filtering (~2 days)
-2. Phase 1 — Multi-tenant rework: kill `COUPLE_ID = "zev-irit"`, add signup, couple-pairing flow (~5-7 days)
-3. Phase 2 — Register `heyus.app`, deploy to Vercel, ToS/Privacy, account deletion (~3-4 days)
-4. Phase 3 — Stripe Checkout with 3 SKUs (Free / $4.99 mo / $29.99 yr / $79 lifetime), couple-shared entitlement (~3-5 days)
-5. **Validation gate**: 10 paying couples in 30 days
-6. Phase 4 — Expo native if gate hits (~14-21 days)
-7. Phase 5 — App Store with 13+ rating (per 2026 Apple rating system update), submit with positioning + pricing intact
+1. **Phase 0.5** — Vitest + tests for score math, bucket boundaries, suggestion filtering (~2 days)
+2. **Phase 1** — Multi-tenant rework: kill `COUPLE_ID = "zev-irit"`, add signup, account-linking flow (~5-7 days)
+3. **Phase 2** — Register `twoof.us`, deploy to Vercel, ToS/Privacy, account deletion (~3-4 days)
+4. **Phase 3** — Stripe Checkout, single SKU $9.99/yr with 7-day trial, per-user subscription gating (~3-5 days)
+5. **Validation gate**: 10 paying *individuals* (5 couples both-pay, or some mix) in 30 days
+6. **Phase 4** — Expo native if gate hits (~14-21 days)
+7. **Phase 5** — App Store with 13+ rating, IAP at $9.99/yr matching web price
 
 ## Sources
 
@@ -175,6 +185,5 @@ Phase order:
 - [Paired pricing](https://couplesanalytics.com/en/science/paired-app-cost-what-you-really-pay) — Paired up to ~$15/mo
 - [Between Plus pricing](https://help.between.us/hc/en-us/articles/360016496273-What-is-the-difference-between-a-subscription-and-a-Couple-Lifetime-Plan) — $26.99 lifetime, $13.99/yr
 - [Apple App Store rating system 2026 update](https://capgo.app/blog/app-store-age-ratings-guide/) — new 13+/16+/18+ tiers, deadline Jan 31 2026
-- [RevenueCat lifetime pricing guidance](https://www.revenuecat.com/blog/growth/lifetime-subscriptions/) — 2.5-4x annual rate
 - [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
 - [Indie hybrid pricing growth data](https://www.indiehackers.com/post/subscriptions-vs-one-time-payments-a-developers-honest-take-f153e48960)

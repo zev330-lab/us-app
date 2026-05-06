@@ -16,15 +16,16 @@ Full transformation plan saved at `docs/plans/2026-05-05-us-marketplace-plan.md`
 - Marketplace transformation plan (Phases 0.5 → 6, calendar estimates)
 - Discovery audit: vault entry was 6 weeks stale, now corrected
 
-## Decisions made 2026-05-05
+## Decisions made 2026-05-05 (locked)
 
 Recorded in `docs/plans/2026-05-05-positioning-pricing-domain.md`.
 
 1. **Positioning** — *"Know how your partner feels — without asking."*
-2. **Pricing** — Hybrid: Free / $4.99 mo / $29.99 yr / $79 lifetime. One pays, both unlock. 7-day trial.
-3. **Domain** — Primary `heyus.app` (Zev to register on Namecheap, ~$15/yr). Fallbacks: `usthe.app`, `loveus.app`, `getus.app`.
+2. **Pricing** — 7-day free trial → auto-renews to **$9.99/year per user**. Each partner subscribes individually. Single SKU, no free tier, no lifetime. Per-user UI gating.
+3. **Domain** — `twoof.us` (Zev to register on Namecheap, ~$15-25/yr).
+4. **Account linking** — invite-code flow. Independent of payment.
 
-Phase 0.5 starts on next session — no decisions blocking.
+Phase 0.5 starts immediately.
 
 ## What's next (in order)
 
