@@ -1,5 +1,6 @@
 import {
   ref,
+  get,
   update,
   serverTimestamp,
   runTransaction,
@@ -128,34 +129,32 @@ export async function redeemInviteCode(
 
   const inviteRef = ref(db, `inviteCodes/${code}`);
 
-  let abortReason: 'not_found' | 'already_redeemed' | 'self_redeem' | 'expired' | null = null;
+  // Pre-fetch to surface the correct typed error. The transaction handler can
+  // be called with null on its first pass before Firebase pulls real data, and
+  // returning `undefined` from that first pass would abort with no chance to
+  // see the actual server state — so a redeemed-but-existing code looks
+  // identical to a non-existent one.
+  const snap = await get(inviteRef);
+  if (!snap.exists()) return { error: 'not_found' };
+  const data = snap.val();
+  if (data.createdBy === uid) return { error: 'self_redeem' };
+  if (data.redeemed) return { error: 'already_redeemed' };
+  if (typeof data.expiresAt === 'number' && data.expiresAt < Date.now()) {
+    return { error: 'expired' };
+  }
 
+  // Race-condition guard: if a third user submits the same code simultaneously,
+  // only one transaction can mark `redeemed = true`. The other sees `redeemed`
+  // already flipped and aborts.
   const tx = await runTransaction(inviteRef, (current) => {
-    if (current === null) {
-      abortReason = 'not_found';
-      return current;
-    }
-    if (current.createdBy === uid) {
-      abortReason = 'self_redeem';
-      return current;
-    }
-    if (current.redeemed) {
-      abortReason = 'already_redeemed';
-      return current;
-    }
-    if (typeof current.expiresAt === 'number' && current.expiresAt < Date.now()) {
-      abortReason = 'expired';
-      return current;
-    }
-    abortReason = null;
+    if (current === null || current.redeemed) return;
     current.redeemed = true;
     current.redeemedBy = uid;
     current.redeemedAt = Date.now();
     return current;
   });
 
-  if (abortReason) return { error: abortReason };
-  if (!tx.committed || !tx.snapshot.exists()) return { error: 'not_found' };
+  if (!tx.committed || !tx.snapshot.exists()) return { error: 'already_redeemed' };
 
   const after = tx.snapshot.val();
   const coupleId: string = after.coupleId;

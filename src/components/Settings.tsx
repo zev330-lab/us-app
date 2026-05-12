@@ -19,7 +19,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { deleteCurrentAccount, unlinkFromCouple } from '../services/account';
 import { navigate } from '../lib/router';
 
-type DeleteStep = 'idle' | 'confirm' | 'password' | 'deleting';
+type DeleteStep = 'idle' | 'confirm' | 'deleting';
 
 export default function Settings() {
   const { user, userDoc, coupleId } = useAuthContext();
@@ -48,7 +48,6 @@ export default function Settings() {
     setSavingName(true);
     try {
       await update(ref(db, `users/${user.uid}`), { displayName: cleaned });
-      // Mirror into our couple's partner record so partner sees the new name.
       if (coupleId) {
         await update(ref(db, `couples/${coupleId}/partners/${user.uid}`), { name: cleaned });
       }
@@ -62,34 +61,32 @@ export default function Settings() {
     if (!coupleId) return;
     setUnlinking(true);
     await unlinkFromCouple(user.uid, coupleId);
-    // AuthContext picks up coupleId: null, App routes to Pair.
     setUnlinking(false);
+    navigate('/');
   };
 
-  const handleDelete = async (e?: FormEvent) => {
-    if (e) e.preventDefault();
-    setDeleteStep('deleting');
+  const handleDelete = async (e: FormEvent) => {
+    e.preventDefault();
     setDeleteError('');
-    const result = await deleteCurrentAccount(user, coupleId, deletePassword || undefined);
-    if (result.ok) {
-      // User is signed out by deleteUser(); AuthContext will route to Auth.
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm.');
       return;
     }
-    if (result.error === 'requires_password') {
-      setDeleteStep('password');
+    setDeleteStep('deleting');
+    const result = await deleteCurrentAccount(user, coupleId, deletePassword);
+    if (result.ok) {
+      // deleteUser() signs the user out; AuthContext re-renders to Auth.
       return;
     }
     if (result.error === 'wrong_password') {
       setDeleteError('Wrong password. Try again.');
-      setDeleteStep('password');
-      return;
-    }
-    if (result.error === 'too_many_requests') {
+    } else if (result.error === 'too_many_requests') {
       setDeleteError('Too many attempts. Try again later.');
-      setDeleteStep('password');
-      return;
+    } else if (result.error === 'network') {
+      setDeleteError('Network problem. Try again in a moment.');
+    } else {
+      setDeleteError("We couldn't delete your account. Email hello@twoof.us if this persists.");
     }
-    setDeleteError("We couldn't delete your account. Try again or email hello@twoof.us.");
     setDeleteStep('confirm');
   };
 
@@ -257,73 +254,49 @@ export default function Settings() {
             </button>
           )}
 
-          {deleteStep === 'confirm' && (
-            <div className="mt-4 p-4 rounded-xl bg-feeling/[0.05] border border-feeling/20 space-y-3">
+          {(deleteStep === 'confirm' || deleteStep === 'deleting') && (
+            <form onSubmit={handleDelete} className="mt-4 p-4 rounded-xl bg-feeling/[0.05] border border-feeling/20 space-y-3">
               <p className="text-text-primary/90 text-sm leading-relaxed">
                 Delete your account permanently? This removes your slider state and history.
                 {coupleId && ' If you\'re the last member of your couple, your couple\'s shared history is also deleted.'}
                 {' '}This can't be undone.
               </p>
-              {deleteError && <p className="text-feeling text-xs">{deleteError}</p>}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setDeleteStep('idle'); setDeleteError(''); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm bg-white/[0.04] border border-white/[0.08]
-                             text-text-primary hover:bg-white/[0.08] transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleDelete()}
-                  className="flex-1 py-2.5 rounded-xl text-sm bg-feeling text-bg-deep
-                             hover:brightness-110 transition-all"
-                >
-                  Delete forever
-                </button>
-              </div>
-            </div>
-          )}
-
-          {deleteStep === 'password' && (
-            <form onSubmit={handleDelete} className="mt-4 p-4 rounded-xl bg-feeling/[0.05] border border-feeling/20 space-y-3">
-              <p className="text-text-primary/90 text-sm">
-                Enter your password to confirm deletion.
+              <p className="text-text-secondary/70 text-xs">
+                Enter your password to confirm.
               </p>
               <input
                 type="password"
-                autoFocus
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
                 placeholder="Password"
                 autoComplete="current-password"
                 required
+                disabled={deleteStep === 'deleting'}
                 className="w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08]
                            text-text-primary placeholder-text-secondary/40 text-sm
-                           focus:outline-none focus:border-accent/40"
+                           focus:outline-none focus:border-accent/40 disabled:opacity-60"
               />
               {deleteError && <p className="text-feeling text-xs">{deleteError}</p>}
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => { setDeleteStep('idle'); setDeletePassword(''); setDeleteError(''); }}
+                  disabled={deleteStep === 'deleting'}
                   className="flex-1 py-2.5 rounded-xl text-sm bg-white/[0.04] border border-white/[0.08]
-                             text-text-primary hover:bg-white/[0.08] transition-colors"
+                             text-text-primary hover:bg-white/[0.08] disabled:opacity-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  disabled={deleteStep === 'deleting' || !deletePassword}
                   className="flex-1 py-2.5 rounded-xl text-sm bg-feeling text-bg-deep
-                             hover:brightness-110 transition-all"
+                             hover:brightness-110 disabled:opacity-50 transition-all"
                 >
-                  Confirm delete
+                  {deleteStep === 'deleting' ? 'Deleting…' : 'Delete forever'}
                 </button>
               </div>
             </form>
-          )}
-
-          {deleteStep === 'deleting' && (
-            <p className="text-text-secondary/60 text-sm py-3 italic">Deleting your account…</p>
           )}
         </section>
 

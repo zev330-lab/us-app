@@ -8,7 +8,6 @@ import { ref, get, update, remove } from 'firebase/database';
 import { db } from '../firebase';
 
 export type DeleteAccountError =
-  | 'requires_password'
   | 'wrong_password'
   | 'too_many_requests'
   | 'network'
@@ -25,25 +24,47 @@ interface DeleteFailure {
 /**
  * Cascading deletion of the current user's account.
  *
- * 1. If the user belongs to a couple, remove their partner subtree and members
- *    entry. If they were the last member, delete the entire couple doc
- *    (history included).
- * 2. Delete the users/{uid} doc.
- * 3. Delete the Firebase Auth user.
+ * Order matters: re-auth FIRST (proves the user can complete the operation),
+ * THEN delete RTDB state, THEN delete the Firebase Auth user. If re-auth fails
+ * we abort with no DB writes — the user can retry. If the final Auth deletion
+ * fails after DB writes succeeded, the user data is already gone (privacy
+ * guarantee met) and the Auth account lingers but can be removed on a retry.
  *
- * Step 3 requires a recent sign-in (Firebase's "sensitive operation" rule). If
- * the caller does not pass a password and Firebase throws
- * auth/requires-recent-login, we return 'requires_password' so the UI can
- * prompt and re-call. If a password is passed, we re-authenticate first.
+ * The password is required, not optional. The previous "try without password
+ * first, fall back if Firebase complains" flow has a fatal race: we'd remove
+ * users/{uid} before deleteUser failed with requires-recent-login, leaving
+ * the user authed-but-docless and stuck on the loading screen.
  */
 export async function deleteCurrentAccount(
   user: User,
   coupleId: string | null,
-  password?: string,
+  password: string,
 ): Promise<DeleteResult | DeleteFailure> {
   const uid = user.uid;
 
-  // ── 1. Detach from couple (or delete it if we're the last member) ──
+  if (!user.email) {
+    return { ok: false, error: 'unknown' };
+  }
+
+  // ── 1. Re-auth FIRST (no DB writes yet) ──
+  try {
+    const cred = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, cred);
+  } catch (e) {
+    const code = (e as { code?: string }).code;
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+      return { ok: false, error: 'wrong_password' };
+    }
+    if (code === 'auth/too-many-requests') {
+      return { ok: false, error: 'too_many_requests' };
+    }
+    if (code === 'auth/network-request-failed') {
+      return { ok: false, error: 'network' };
+    }
+    return { ok: false, error: 'unknown' };
+  }
+
+  // ── 2. Detach from couple (or delete it if we're the last member) ──
   if (coupleId) {
     try {
       const membersSnap = await get(ref(db, `couples/${coupleId}/members`));
@@ -64,7 +85,7 @@ export async function deleteCurrentAccount(
     }
   }
 
-  // ── 2. Delete user doc ──
+  // ── 3. Delete user doc ──
   try {
     await remove(ref(db, `users/${uid}`));
   } catch (e) {
@@ -72,31 +93,15 @@ export async function deleteCurrentAccount(
     return { ok: false, error: 'unknown' };
   }
 
-  // ── 3. Re-auth (if password provided) and delete Auth user ──
-  if (password && user.email) {
-    try {
-      const cred = EmailAuthProvider.credential(user.email, password);
-      await reauthenticateWithCredential(user, cred);
-    } catch (e) {
-      const code = (e as { code?: string }).code;
-      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        return { ok: false, error: 'wrong_password' };
-      }
-      if (code === 'auth/too-many-requests') {
-        return { ok: false, error: 'too_many_requests' };
-      }
-      return { ok: false, error: 'unknown' };
-    }
-  }
-
+  // ── 4. Delete Firebase Auth user ──
   try {
     await deleteUser(user);
     return { ok: true };
   } catch (e) {
+    // RTDB data is already gone — privacy intact. If we get here, the Auth
+    // account is orphaned; the user can sign in again (bootstrap re-creates a
+    // fresh doc) and retry delete from Settings.
     const code = (e as { code?: string }).code;
-    if (code === 'auth/requires-recent-login') {
-      return { ok: false, error: 'requires_password' };
-    }
     if (code === 'auth/network-request-failed') {
       return { ok: false, error: 'network' };
     }

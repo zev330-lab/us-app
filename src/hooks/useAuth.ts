@@ -6,6 +6,7 @@ import {
 } from 'firebase/auth';
 import { ref, set, serverTimestamp } from 'firebase/database';
 import { auth, db } from '../firebase';
+import { navigate } from '../lib/router';
 
 export interface SignupInput {
   email: string;
@@ -17,6 +18,8 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     const trimmedEmail = email.trim().toLowerCase();
     await signInWithEmailAndPassword(auth, trimmedEmail, password);
+    // Same reasoning as signup: new auth session starts at root.
+    navigate('/');
   };
 
   const signup = async ({ email, password, displayName }: SignupInput) => {
@@ -36,10 +39,18 @@ export function useAuth() {
       coupleId: null,
       createdAt: serverTimestamp(),
     });
+
+    // Reset URL so the new user flows from root → Disclaimer → Pair instead of
+    // being stranded on a path inherited from a previous session.
+    navigate('/');
   };
 
   const logout = async () => {
     await signOut(auth);
+    // Reset URL to root so the post-logout Auth screen isn't sitting on /settings
+    // or /onboarding — if the user reloads, they shouldn't land on a route they
+    // can't access.
+    navigate('/');
   };
 
   return { login, signup, logout };

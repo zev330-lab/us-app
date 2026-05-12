@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { LogOut, Pencil, Check } from 'lucide-react';
+import { LogOut, Pencil, Check, Settings as SettingsIcon } from 'lucide-react';
 import { ref, update } from 'firebase/database';
 import { db } from '../firebase';
 import { useAuthContext } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import {
   type RedeemInviteError,
 } from '../services/coupling';
 import { normalizeInviteCode } from '../lib/inviteCode';
+import { navigate } from '../lib/router';
 
 type Choice = 'fresh' | 'join' | null;
 
@@ -103,13 +104,22 @@ export default function Pair() {
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
           Us
         </h1>
-        <button
-          onClick={logout}
-          className="p-2 rounded-full hover:bg-white/5 transition-colors text-text-secondary/60 hover:text-text-primary"
-          aria-label="Log out"
-        >
-          <LogOut size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => navigate('/settings')}
+            className="p-2 rounded-full hover:bg-white/5 transition-colors text-text-secondary/60 hover:text-text-primary"
+            aria-label="Settings"
+          >
+            <SettingsIcon size={18} />
+          </button>
+          <button
+            onClick={logout}
+            className="p-2 rounded-full hover:bg-white/5 transition-colors text-text-secondary/60 hover:text-text-primary"
+            aria-label="Log out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </header>
 
       <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">

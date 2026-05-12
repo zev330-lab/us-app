@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type User, onAuthStateChanged } from 'firebase/auth';
-import { ref, onValue, set, serverTimestamp } from 'firebase/database';
+import { ref, onValue, get, set, serverTimestamp } from 'firebase/database';
 import { auth, db } from '../firebase';
 import type { UserDoc } from '../types';
 
@@ -24,41 +24,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authLoading, setAuthLoading] = useState(true);
   const [docLoading, setDocLoading] = useState(false);
 
+  // Auth listener + one-shot bootstrap for legacy accounts.
+  //
+  // The bootstrap lives HERE, not in the value listener below, on purpose:
+  // accounts can land here with no users/{uid} doc when they're either
+  // (a) brand-new signups whose seed write is still in flight, or (b) legacy
+  // Firebase Auth accounts created before the multi-tenant rewrite. In both
+  // cases we want one bootstrap write, not a re-bootstrap every time the doc
+  // is missing — otherwise account deletion races against the listener and
+  // resurrects a zombie doc the instant we delete it.
   useEffect(() => {
-    return onAuthStateChanged(auth, (firebaseUser) => {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setAuthLoading(false);
       if (!firebaseUser) {
         setUserDoc(null);
+        return;
+      }
+      const userRef = ref(db, `users/${firebaseUser.uid}`);
+      try {
+        const snap = await get(userRef);
+        if (!snap.exists()) {
+          await set(userRef, {
+            email: firebaseUser.email ?? '',
+            displayName:
+              firebaseUser.displayName?.trim() ||
+              firebaseUser.email?.split('@')[0] ||
+              'You',
+            coupleId: null,
+            createdAt: serverTimestamp(),
+          });
+        }
+      } catch (e) {
+        console.warn('[Us] user-doc bootstrap failed:', e);
       }
     });
   }, []);
 
+  // Live listener — reflects current state only. Never writes.
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setUserDoc(null);
+      setDocLoading(false);
+      return;
+    }
     setDocLoading(true);
     const userRef = ref(db, `users/${user.uid}`);
     const unsubscribe = onValue(
       userRef,
       (snapshot) => {
-        if (snapshot.exists()) {
-          setUserDoc(snapshot.val() as UserDoc);
-          setDocLoading(false);
-          return;
-        }
-        // Bootstrap a user doc for legacy auth accounts (created before the
-        // multi-tenant rewrite shipped) so they don't get stranded on a blank
-        // screen. Once the doc is written, this listener fires again with it.
-        set(userRef, {
-          email: user.email ?? '',
-          displayName: user.displayName?.trim() || user.email?.split('@')[0] || 'You',
-          coupleId: null,
-          createdAt: serverTimestamp(),
-        }).catch(() => setDocLoading(false));
+        setUserDoc(snapshot.exists() ? (snapshot.val() as UserDoc) : null);
+        setDocLoading(false);
       },
       (error) => {
-        // Permission denied or network error: stop spinning, surface as null doc
-        // so App.tsx can route to Pair (which has its own re-auth fallback).
         console.warn('[Us] users/{uid} read failed:', error.message);
         setUserDoc(null);
         setDocLoading(false);

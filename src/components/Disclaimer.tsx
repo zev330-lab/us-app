@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { useAuthContext } from '../context/AuthContext';
 import { navigate } from '../lib/router';
 
+
 /**
  * First-time onboarding gate: shown to newly signed-up users (and any legacy
  * account that hasn't accepted yet) before they can reach the Pair screen.
@@ -23,7 +24,10 @@ export default function Disclaimer() {
     setSubmitting(true);
     try {
       await update(ref(db, `users/${user.uid}`), { acceptedDisclaimer: Date.now() });
-      // AuthContext picks up the update; App.tsx re-routes to Pair.
+      // Reset URL to root in case we got here via a deep path like /settings;
+      // post-acceptance the user should flow to Pair (or Dashboard if linked),
+      // not back into a stale route.
+      navigate('/');
     } finally {
       setSubmitting(false);
     }
