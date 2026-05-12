@@ -11,6 +11,7 @@ export interface UserDoc {
   displayName: string;
   coupleId: string | null;
   createdAt: number;
+  acceptedDisclaimer?: number;
 }
 
 export interface CoupleDoc {

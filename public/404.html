@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Us</title>
+    <script>
+      // GitHub Pages SPA fallback (rafrex/spa-github-pages technique).
+      // GH Pages 404s on any path without a real file, so when a deep link like
+      // /us-app/terms is requested, GH serves this page. We pack the original
+      // path into a query string and redirect to the SPA root, where a snippet
+      // in index.html unpacks it back into history.
+      var pathSegmentsToKeep = 1; // keep "/us-app/" prefix
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?p=/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

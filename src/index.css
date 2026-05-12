@@ -199,6 +199,41 @@ input[type="range"]:active::-moz-range-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Legal-page prose ── */
+.legal-prose h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+.legal-prose p {
+  margin-bottom: 0.75rem;
+}
+.legal-prose ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.legal-prose li {
+  margin-bottom: 0.35rem;
+}
+.legal-prose a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.legal-prose a:hover {
+  filter: brightness(1.2);
+}
+.legal-prose .emphasis {
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
 /* ── Chrome autofill override ──
    Without this, autofilled inputs get a white/lavender background that
    clashes with the dark glass card. The 5000s transition is the standard

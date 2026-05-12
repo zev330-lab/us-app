@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useState } from 'react';
-import { LogOut, Bell, BellOff, Copy, Check } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, BellOff, Copy, Check } from 'lucide-react';
+import { navigate } from '../lib/router';
 import { ref, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import { useAuthContext } from '../context/AuthContext';
@@ -7,7 +8,6 @@ import { usePartnerSync } from '../hooks/usePartnerSync';
 import { useSuggestions } from '../hooks/useSuggestions';
 import { useNotifications } from '../hooks/useNotifications';
 import { useUpdateDot } from '../hooks/useUpdateDot';
-import { useAuth } from '../hooks/useAuth';
 import { regenerateInviteCode } from '../services/coupling';
 import type { PartnerState as PartnerStateType } from '../types';
 import Slider from './Slider';
@@ -19,7 +19,6 @@ import Suggestions from './Suggestions';
 
 export default function Dashboard() {
   const { user, userDoc, coupleId } = useAuthContext();
-  const { logout } = useAuth();
 
   const uid = user!.uid;
   const myName = userDoc!.displayName;
@@ -103,11 +102,11 @@ export default function Dashboard() {
             </button>
           )}
           <button
-            onClick={logout}
+            onClick={() => navigate('/settings')}
             className="p-2.5 rounded-full hover:bg-white/5 transition-colors text-text-secondary/60 hover:text-text-primary"
-            aria-label="Log out"
+            aria-label="Settings"
           >
-            <LogOut size={18} />
+            <SettingsIcon size={18} />
           </button>
         </div>
       </header>
