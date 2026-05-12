@@ -1,36 +1,761 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="icons/icon-192.png" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1A1A2E" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
-    <title>Us</title>
-    <script>
-      // GitHub Pages SPA fallback (rafrex/spa-github-pages technique) —
-      // unpacks the path/query escaped by 404.html so deep links survive.
-      (function (l) {
-        if (l.search[1] === '/') {
-          var decoded = l.search.slice(1).split('&').map(function (s) {
-            return s.replace(/~and~/g, '&');
-          }).join('?');
-          window.history.replaceState(
-            null, '',
-            l.pathname.slice(0, -1) + decoded + l.hash
-          );
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0F0F0E" />
+<title>Permit Lead System — Proposal · Zev</title>
+<meta name="description" content="A new construction permit lead system that runs itself. Private proposal — May 2026." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #F4F0E8;
+    --cream-tint: #ECE6D9;
+    --ink: #0F0F0E;
+    --ink-soft: #1A1A18;
+    --paper-on-ink: #F4F0E8;
+    --muted: #6B665C;
+    --muted-on-ink: #A8A296;
+    --accent: #E04A2F;
+    --line: #D8D2C4;
+    --line-on-ink: #2E2C28;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Geist', -apple-system, system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* paper grain overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 22px;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(244,240,232,0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .logo {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 19px;
+    letter-spacing: -0.03em;
+  }
+  .logo span { color: var(--accent); }
+  .topbar-right {
+    font-size: 12.5px;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- TYPOGRAPHY ---------- */
+  h1, h2, h3, .display {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    font-weight: 800;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .section { padding: 64px 0; }
+  .section-tight { padding: 48px 0; }
+
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .kicker .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+  }
+  .kicker-num { color: var(--accent); }
+
+  h2.headline {
+    font-size: clamp(30px, 8.5vw, 44px);
+    margin-bottom: 18px;
+  }
+
+  p.lead {
+    font-size: 17px;
+    color: var(--muted);
+    max-width: 30em;
+  }
+  p.lead b, p.lead strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- HERO ---------- */
+  .hero { padding: 56px 0 60px; }
+  .pill {
+    display: inline-block;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.4);
+    border-radius: 999px;
+    padding: 8px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 26px;
+  }
+  .pill b { color: var(--ink); }
+  h1.hero-title {
+    font-size: clamp(40px, 13vw, 64px);
+    margin-bottom: 22px;
+  }
+  .hero p {
+    font-size: 17.5px;
+    color: var(--muted);
+    max-width: 28em;
+    margin-bottom: 30px;
+  }
+  .hero p b, .hero p strong { color: var(--ink); font-weight: 600; }
+
+  .callout-black {
+    background: var(--ink);
+    color: var(--paper-on-ink);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+    position: relative;
+    overflow: hidden;
+  }
+  .callout-black .big-num {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    font-size: clamp(40px, 11vw, 56px);
+    line-height: 1;
+    color: var(--accent);
+  }
+  .callout-black .label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted-on-ink);
+    margin-top: 12px;
+  }
+
+  /* ---------- PROBLEM PAINS ---------- */
+  .pains { margin-top: 34px; display: flex; flex-direction: column; gap: 20px; }
+  .pain {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .pain .icon {
+    flex: 0 0 46px;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .pain .icon.accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pain h3 { font-size: 19px; margin-bottom: 4px; }
+  .pain p { font-size: 15px; color: var(--muted); }
+
+  /* ---------- FIX CARDS ---------- */
+  .stack { margin-top: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .fix-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 22px;
+  }
+  .fix-card .row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+  .fix-card .step-no {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .fix-card h3 { font-size: 21px; margin: 10px 0 6px; }
+  .fix-card p { font-size: 15px; color: var(--muted); max-width: 30em; }
+  .fix-card .cost {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .fix-card .cost.free { color: var(--muted); }
+
+  /* ---------- CHECKLIST ---------- */
+  .checklist { margin-top: 30px; display: flex; flex-direction: column; gap: 2px; }
+  .check {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .check:first-child { border-top: 1px solid var(--line); }
+  .check .tick {
+    flex: 0 0 24px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    margin-top: 1px;
+  }
+  .check .txt { font-size: 16px; }
+  .check .txt b { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+  .check .txt .sub { display: block; font-size: 14px; color: var(--muted); margin-top: 2px; }
+
+  /* ---------- MONEY BAND ---------- */
+  .band { background: var(--cream-tint); }
+  .compare {
+    margin-top: 30px;
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .compare .col {
+    flex: 1;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px 18px;
+    text-align: center;
+  }
+  .compare .col.win { background: var(--ink); border-color: var(--ink); }
+  .compare .col .tag {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .compare .col.win .tag { color: var(--accent); }
+  .compare .col .v {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    letter-spacing: -0.04em; font-size: clamp(28px, 8vw, 38px); line-height: 1;
+  }
+  .compare .col.now .v { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
+  .compare .col.win .v { color: var(--paper-on-ink); }
+  .compare .col .vsub { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .compare .col.win .vsub { color: var(--muted-on-ink); }
+  .compare .arrow {
+    align-self: center;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--accent);
+    flex: 0 0 auto;
+  }
+  .money-banner {
+    margin-top: 18px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 24px 22px;
+    text-align: center;
+  }
+  .money-banner .b1 {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    letter-spacing: -0.03em; font-size: clamp(24px, 6.5vw, 32px); line-height: 1.05;
+  }
+  .money-banner .b2 { font-size: 14.5px; margin-top: 8px; opacity: 0.92; }
+
+  /* ---------- THE DEAL ---------- */
+  .deal-card {
+    margin-top: 30px;
+    background: var(--ink);
+    color: var(--paper-on-ink);
+    border-radius: var(--radius);
+    padding: 30px 26px;
+  }
+  .deal-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .deal-price {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    letter-spacing: -0.045em; font-size: clamp(52px, 16vw, 76px); line-height: 0.9;
+  }
+  .deal-price .lbl { display:block; font-family:'Geist',sans-serif; font-weight:500; font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color: var(--muted-on-ink); margin-bottom: 8px; }
+  .deal-old {
+    text-align: right;
+    flex: 0 0 auto;
+  }
+  .deal-old .strike {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+    font-size: 22px; color: var(--muted-on-ink);
+    text-decoration: line-through; text-decoration-thickness: 2px;
+  }
+  .deal-old .friends {
+    display: inline-block;
+    margin-top: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px; font-weight: 600;
+    padding: 6px 11px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .deal-lines {
+    margin-top: 26px;
+    border-top: 1px solid var(--line-on-ink);
+  }
+  .deal-lines .li {
+    display: flex; justify-content: space-between; gap: 14px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line-on-ink);
+    font-size: 15px;
+  }
+  .deal-lines .li .k { color: var(--muted-on-ink); }
+  .deal-lines .li .vv { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; letter-spacing: -0.01em; text-align: right; }
+
+  /* ---------- PAYMENT STEPS ---------- */
+  .steps { margin-top: 30px; display: flex; flex-direction: column; gap: 14px; }
+  .pstep {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    position: relative;
+  }
+  .pstep .head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .pstep .no {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--ink); color: var(--paper-on-ink);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 16px;
+  }
+  .pstep .amt {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    letter-spacing: -0.03em; font-size: 30px; line-height: 1;
+  }
+  .pstep .when { font-size: 13px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-left: auto; text-align: right; }
+  .pstep p { font-size: 14.5px; color: var(--muted); }
+  .steps-foot {
+    margin-top: 16px;
+    font-size: 13.5px;
+    color: var(--muted);
+    padding-left: 4px;
+  }
+
+  /* ---------- TIMELINE ---------- */
+  .timeline { margin-top: 30px; }
+  .tl-note { font-size: 13.5px; color: var(--muted); margin-bottom: 20px; }
+  .tl-row {
+    display: flex; gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .tl-row:first-child { border-top: 1px solid var(--line); }
+  .tl-day {
+    flex: 0 0 58px;
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 3px;
+  }
+  .tl-body h3 { font-size: 17px; margin-bottom: 2px; }
+  .tl-body p { font-size: 14.5px; color: var(--muted); }
+
+  /* ---------- PHASE II ---------- */
+  .phase2-section { background: var(--ink); color: var(--paper-on-ink); }
+  .phase2-section .kicker { color: var(--muted-on-ink); }
+  .phase2-section h2.headline { color: var(--paper-on-ink); }
+  .phase2-card {
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 30px 24px;
+    background: rgba(224,74,47,0.06);
+  }
+  .phase2-card .lead { color: var(--muted-on-ink); font-size: 16px; }
+  .phase2-card .lead b { color: var(--paper-on-ink); }
+  .p2-items { margin-top: 26px; display: flex; flex-direction: column; gap: 14px; }
+  .p2-item {
+    background: var(--ink-soft);
+    border: 1px solid var(--line-on-ink);
+    border-radius: 14px;
+    padding: 18px 18px;
+  }
+  .p2-item h3 { font-size: 18px; margin-bottom: 5px; color: var(--paper-on-ink); }
+  .p2-item h3 .em { color: var(--accent); }
+  .p2-item p { font-size: 14.5px; color: var(--muted-on-ink); }
+  .p2-quote {
+    margin-top: 26px;
+    border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 18px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    color: var(--paper-on-ink);
+    line-height: 1.3;
+  }
+  .p2-badge {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 11.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    margin-bottom: 22px;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta-card {
+    margin-top: 30px;
+    background: var(--ink);
+    color: var(--paper-on-ink);
+    border-radius: var(--radius);
+    padding: 36px 28px;
+    text-align: center;
+  }
+  .cta-card .amt {
+    font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+    letter-spacing: -0.045em; font-size: clamp(56px, 18vw, 84px); line-height: 0.9;
+    color: var(--accent);
+  }
+  .cta-card .amt-lbl { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-on-ink); margin-bottom: 10px; }
+  .cta-card .line { font-size: 15px; color: var(--muted-on-ink); margin-top: 18px; }
+  .cta-card .sign { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; margin-top: 22px; letter-spacing: -0.02em; }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 0 48px;
+    text-align: center;
+  }
+  footer p { font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em; }
+
+  /* ---------- REVEAL ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.7s cubic-bezier(.16,1,.3,1), transform 0.7s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  @media (min-width: 600px) {
+    .section { padding: 84px 0; }
+    h1.hero-title { font-size: 66px; }
+    .pstep .amt { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="logo">ZEV<span>.</span></div>
+    <div class="topbar-right">Proposal · May 2026</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div class="pill reveal">For <b>[BARBER NAME]</b> · Confidential</div>
+    <h1 class="hero-title reveal">A new lead system that runs itself.</h1>
+    <p class="reveal">You pay <b>$500 every week</b> for a list of construction permits. Your guy is retiring. Here's how we replace him — and save you $20,000 in the first year.</p>
+    <div class="callout-black reveal">
+      <div class="big-num num">$20,000</div>
+      <div class="label">saved year one</div>
+    </div>
+  </div>
+</header>
+
+<!-- 01 PROBLEM -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">01</span> · The Problem</div>
+    <h2 class="headline reveal">You're paying too much for too little.</h2>
+    <div class="pains">
+      <div class="pain reveal">
+        <div class="icon accent num">$</div>
+        <div>
+          <h3>$500 a week. Every week.</h3>
+          <p>That's $26,000 a year for an Excel file someone emails you by hand.</p>
+        </div>
+      </div>
+      <div class="pain reveal">
+        <div class="icon">→</div>
+        <div>
+          <h3>Your vendor is retiring.</h3>
+          <p>45 years in, winding down, won't sell. The list goes away — soon.</p>
+        </div>
+      </div>
+      <div class="pain reveal">
+        <div class="icon">⏱</div>
+        <div>
+          <h3>Once a week is too slow.</h3>
+          <p>Permits drop daily. By the time you see them, someone else already called.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 THE FIX -->
+<section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">02</span> · The Fix</div>
+    <h2 class="headline reveal">Three pieces. One system.</h2>
+    <div class="stack">
+      <div class="fix-card reveal">
+        <div class="row">
+          <span class="step-no">PIECE 1</span>
+          <span class="cost free num">$0</span>
+        </div>
+        <h3>Boston's permits, straight from the source.</h3>
+        <p>The city publishes its construction permits for free. We pull them automatically, every day.</p>
+      </div>
+      <div class="fix-card reveal">
+        <div class="row">
+          <span class="step-no">PIECE 2</span>
+          <span class="cost free num">$0</span>
+        </div>
+        <h3>Town scrapers I build for you.</h3>
+        <p>Marlborough plus 5–7 MetroWest towns. Custom-built bots that check each town's permit site daily — no subscriptions.</p>
+      </div>
+      <div class="fix-card reveal">
+        <div class="row">
+          <span class="step-no">PIECE 3</span>
+          <span class="cost num">$250/mo</span>
+        </div>
+        <h3>Your private dashboard.</h3>
+        <p>Everything lands in one place, ranked and ready. Hosting, upkeep, and the scraping operation — all covered in the monthly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 WHAT YOU GET -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">03</span> · What You Get</div>
+    <h2 class="headline reveal">Open the email. Make the calls.</h2>
+    <div class="checklist">
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>A 6am email, every morning</b><span class="sub">Fresh permits in your inbox before your first coffee.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>DIY homeowners flagged automatically</b><span class="sub">The system tags the permits pulled by owners themselves — your best calls.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>AI ranks every lead</b><span class="sub">Hottest opportunities float to the top. No more scrolling a spreadsheet.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>A dashboard built for your phone</b><span class="sub">Check leads anywhere, between cuts, in the truck.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>Excel export — your current format</b><span class="sub">Same columns you use today. Nothing to relearn.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>Only the towns you pick</b><span class="sub">Marlborough and the towns around it. Add or drop any time.</span></span></div>
+      <div class="check reveal"><span class="tick">✓</span><span class="txt"><b>You own the code</b><span class="sub">It's yours. The source comes with the build.</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 THE MONEY -->
+<section class="section band">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">04</span> · The Money</div>
+    <h2 class="headline reveal">The math is obvious.</h2>
+    <div class="compare">
+      <div class="col now reveal">
+        <div class="tag">Now</div>
+        <div class="v num">$26,000</div>
+        <div class="vsub">per year</div>
+      </div>
+      <div class="arrow reveal">→</div>
+      <div class="col win reveal">
+        <div class="tag">With Zev</div>
+        <div class="v num">$6,000</div>
+        <div class="vsub">year one, all in</div>
+      </div>
+    </div>
+    <div class="money-banner reveal">
+      <div class="b1 num">You keep $20,000 —</div>
+      <div class="b2 num">and $23,000 every year after.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 THE DEAL -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">05</span> · The Deal</div>
+    <h2 class="headline reveal">One build. One fair price.</h2>
+    <div class="deal-card reveal">
+      <div class="deal-top">
+        <div class="deal-price num"><span class="lbl">One-time build</span>$3,000</div>
+        <div class="deal-old">
+          <div class="strike num">$3,500</div>
+          <div class="friends">$500 off — friends rate</div>
+        </div>
+      </div>
+      <div class="deal-lines">
+        <div class="li"><span class="k">Hosting &amp; maintenance</span><span class="vv num">$250/mo · billed quarterly ($750)</span></div>
+        <div class="li"><span class="k">Build time</span><span class="vv num">5–7 business days</span></div>
+        <div class="li"><span class="k">Data subscriptions you pay</span><span class="vv num">$0</span></div>
+        <div class="li"><span class="k">Source code</span><span class="vv">Yours, you own it</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 HOW YOU PAY -->
+<section class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">06</span> · How You Pay</div>
+    <h2 class="headline reveal">Three payments. No surprises.</h2>
+    <div class="steps">
+      <div class="pstep reveal">
+        <div class="head">
+          <div class="no num">1</div>
+          <div class="amt num">$1,000</div>
+          <div class="when">Now</div>
+        </div>
+        <p>To start work — locks in your build slot, kicks off the spec, design concept, and the first scraper prototypes.</p>
+      </div>
+      <div class="pstep reveal">
+        <div class="head">
+          <div class="no num">2</div>
+          <div class="amt num">$1,000</div>
+          <div class="when">After approval</div>
+        </div>
+        <p>When you sign off on the look, the feel, and the data setup — usually 1–2 weeks into the project.</p>
+      </div>
+      <div class="pstep reveal">
+        <div class="head">
+          <div class="no num">3</div>
+          <div class="amt num">$1,750</div>
+          <div class="when">On delivery</div>
+        </div>
+        <p>Final $1,000 of the build, plus your first 3 months of hosting included ($750).</p>
+      </div>
+    </div>
+    <div class="steps-foot">After delivery: $750 quarterly for hosting, maintenance, and ongoing scraping operations.</div>
+  </div>
+</section>
+
+<!-- 07 TIMELINE -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">07</span> · Timeline</div>
+    <h2 class="headline reveal">One week of build. Start to finish.</h2>
+    <div class="timeline">
+      <div class="tl-note reveal">The clock starts the day your Step 2 payment clears — once the design is approved.</div>
+      <div class="tl-row reveal"><div class="tl-day">Day 1</div><div class="tl-body"><h3>Lock the spec</h3><p>Final list of towns, email format, dashboard layout — all confirmed in writing.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 2</div><div class="tl-body"><h3>Boston data live</h3><p>City permit feed wired up and pulling daily.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 3</div><div class="tl-body"><h3>Town scrapers — round one</h3><p>Marlborough plus the first batch of MetroWest towns up and running.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 4</div><div class="tl-body"><h3>Town scrapers — round two</h3><p>Remaining towns added; all sources feeding one place.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 5</div><div class="tl-body"><h3>AI scoring &amp; DIY flags</h3><p>Ranking model tuned, homeowner-pulled permits auto-tagged.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 6</div><div class="tl-body"><h3>Dashboard &amp; email</h3><p>Mobile dashboard built, 6am digest scheduled, Excel export matched to your format.</p></div></div>
+      <div class="tl-row reveal"><div class="tl-day">Day 7</div><div class="tl-body"><h3>Walkthrough &amp; handoff</h3><p>We go through it together, I hand over the code, you're live.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 PHASE II -->
+<section class="section phase2-section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">08</span> · Phase II</div>
+    <h2 class="headline reveal">When you're ready to grow it.</h2>
+    <div class="phase2-card reveal">
+      <span class="p2-badge">Optional · Down the road</span>
+      <p class="lead">What we're building first works perfectly for you. But if down the road you want to turn this into a real product — <b>sell it to other guys in your space</b>, or make it slicker and more powerful — the foundation is already there.</p>
+      <div class="p2-items">
+        <div class="p2-item">
+          <h3>A real app</h3>
+          <p>iPhone and Android app instead of just email + dashboard. Push notifications when hot leads drop.</p>
+        </div>
+        <div class="p2-item">
+          <h3>Resell access</h3>
+          <p>Other contractors pay you a monthly fee for filtered access to your data. Turn the system into a small business of its own.</p>
+        </div>
+        <div class="p2-item">
+          <h3>More territories</h3>
+          <p>Add more towns, more states. The same engine scales as wide as you want.</p>
+        </div>
+      </div>
+      <p class="p2-quote">Phase II is its own conversation, its own scope, its own price. Mentioned here only because you should know it's possible — and the way we're building Phase I leaves the door wide open.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 09 CTA -->
+<section class="section">
+  <div class="wrap">
+    <div class="kicker reveal"><span class="dot"></span><span class="kicker-num">09</span> · Let's Go</div>
+    <h2 class="headline reveal">Send the first $1,000. We start tomorrow.</h2>
+    <div class="cta-card reveal">
+      <div class="amt-lbl">Deposit to begin</div>
+      <div class="amt num">$1,000</div>
+      <div class="line">That locks your build slot and kicks off design. Five to seven business days after approval, you're live — and you stop paying $500 a week.</div>
+      <div class="sign">— Zev</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Zev Consulting · May 2026 · Confidential</p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(function (e) { e.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
         }
-      }(window.location));
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+</script>
+</body>
 </html>
