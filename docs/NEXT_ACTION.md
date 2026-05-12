@@ -33,18 +33,28 @@ Phase 0.5 starts immediately.
 
 ## What's next (in order)
 
-1. ✅ **Phase 0.5** — done 2026-05-05.
-2. ✅ **Phase 1** — done 2026-05-05. Multi-tenant data model, signup flow, account linking via invite code, member-gated rules. Old `couples/zev-irit/` data preserved as archive (no migration); Zev + Irit re-onboard after deploy.
-3. **Phase 2** (~3-4 days) — Register `twoof.us`, deploy to Vercel, ToS/Privacy, account deletion, "not therapy" onboarding screen.
-4. **Phase 3** (~3-5 days) — Stripe Checkout, single SKU $9.99/yr with 7-day trial, per-user UI gating.
-5. **Validation gate**: 10 paying users in 30 days. If hit → Phase 4 (Expo native). If not → reassess.
+1. ✅ **Phase 0.5** — done 2026-05-05 (Vitest + tests).
+2. ✅ **Phase 1** — done 2026-05-05 (multi-tenant data model + signup + invite-code linking).
+3. ✅ **Phase 2** — done 2026-05-12 (legal pages, settings, disclaimer gate, account deletion, Vercel-ready config).
+4. **Validation gate skipped** per Zev's directive — going straight to native to avoid CustodyLog-style App Store rejection loops.
+5. **Zev action items** (parallelizable, do anytime):
+   - Register `twoof.us` on Namecheap/Porkbun (~$15-25/yr)
+   - Link the GitHub repo to a new Vercel project; add `twoof.us` as custom domain when registered
+   - Search App Store for the name "Us" — confirm available or pick "Us: For Couples"
+6. **Phase 4** (~14-21 days, next session) — Expo native port + RevenueCat IAP. Plan: `docs/plans/2026-05-12-phase-4-expo-port-plan.md`. Day-by-day breakdown of the monorepo split, screen ports, RevenueCat wiring, and TestFlight submission.
+7. **Phase 5** — App Store submission. Pre-submission checklist: `docs/plans/2026-05-12-app-review-checklist.md`. Run this top-to-bottom before pressing Submit. The CustodyLog lesson: every Apple guideline is verified, not hoped-for.
 
-## Phase 1 deploy state (as of 2026-05-05)
+## Phase 2 deploy state (as of 2026-05-12)
 
-- ✅ Code live at https://zev330-lab.github.io/us-app/ (commit `cab3ae9`)
-- ✅ Firebase rules deployed (member-gated couples, self-only users) — pushed via REST API with gcloud token
-- ✅ A test couple exists for Zev with active invite code (UnlinkedBanner shows it). Code expires 24h from generation; Zev can regenerate from Dashboard
-- ✅ Old `couples/zev-irit/` data preserved as archive (rules now block Zev/Irit from reading it; intentional)
+- ✅ Phase 2 complete (commit `efb10b2`). Live at https://zev330-lab.github.io/us-app/.
+- ✅ Legal pages live at `/terms` and `/privacy` — real content tailored to the app, hosted in-app
+- ✅ Disclaimer onboarding gate enforces "not therapy" acceptance before Pair
+- ✅ Settings screen at `/settings`: profile edit, notifications toggle, unlink partner, ToS/Privacy links, sign out, **delete account** (with password re-auth)
+- ✅ Account-deletion cascade implemented (`src/services/account.ts`): removes partner subtree, leaves couple intact unless last member, deletes user doc + Firebase Auth user
+- ✅ Vercel config ready (`vercel.json`, `npm run build:vercel`) — Zev to link the repo when ready
+- ✅ GH Pages SPA fallback (`public/404.html`) so `/us-app/terms` direct nav works on current deploy
+- ✅ Phase 4 Expo native plan saved: `docs/plans/2026-05-12-phase-4-expo-port-plan.md`
+- ✅ Pre-submission App Review checklist saved: `docs/plans/2026-05-12-app-review-checklist.md`
 
 ## Known issues / risks
 
