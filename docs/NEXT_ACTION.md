@@ -33,16 +33,18 @@ Phase 0.5 starts immediately.
 
 ## What's next (in order)
 
-1. ✅ **Phase 0.5** — done 2026-05-05 (Vitest + tests).
-2. ✅ **Phase 1** — done 2026-05-05 (multi-tenant data model + signup + invite-code linking).
-3. ✅ **Phase 2** — done 2026-05-12 (legal pages, settings, disclaimer gate, account deletion, Vercel-ready config).
-4. **Validation gate skipped** per Zev's directive — going straight to native to avoid CustodyLog-style App Store rejection loops.
-5. **Zev action items** (parallelizable, do anytime):
-   - Register `twoof.us` on Namecheap/Porkbun (~$15-25/yr)
-   - Link the GitHub repo to a new Vercel project; add `twoof.us` as custom domain when registered
-   - Search App Store for the name "Us" — confirm available or pick "Us: For Couples"
-6. **Phase 4** (~14-21 days, next session) — Expo native port + RevenueCat IAP. Plan: `docs/plans/2026-05-12-phase-4-expo-port-plan.md`. Day-by-day breakdown of the monorepo split, screen ports, RevenueCat wiring, and TestFlight submission.
-7. **Phase 5** — App Store submission. Pre-submission checklist: `docs/plans/2026-05-12-app-review-checklist.md`. Run this top-to-bottom before pressing Submit. The CustodyLog lesson: every Apple guideline is verified, not hoped-for.
+1. ✅ **Phase 0.5** — done 2026-05-05.
+2. ✅ **Phase 1** — done 2026-05-05.
+3. ✅ **Phase 2** — done 2026-05-12.
+4. 🚧 **Phase 4 — Expo native port** — kickoff done 2026-05-12 (commit `b36e7fd`). Scaffolding + Firebase + AuthContext + Login + Signup screens shipped. Bundles cleanly via `npx expo export`. Remaining: Disclaimer, Pair, Dashboard (slider, partner card, couple score, comm mode, suggestions, unlinked banner), Settings, Terms, Privacy. Then RevenueCat IAP, Privacy Manifest, EAS Build, TestFlight submission. Realistic remaining work: ~3-5 days focused.
+5. **Phase 5** — App Store submission. Pre-submission checklist: `docs/plans/2026-05-12-app-review-checklist.md`. Don't press Submit until every box is GREEN.
+
+## Zev action items (do anytime, parallelizable with Claude's coding)
+
+- **Register `twoof.us`** on Namecheap/Porkbun (~$15-25/yr). Needed for App Store metadata (privacy policy URL, support URL).
+- **App Store name decision** — search the App Store for "Us"; if taken, pick "Us: For Couples" or "Us — Just the Two of You". Locks the bundle ID name.
+- **Confirm Apple Developer team** — same as CustodyLog or new? Bundle ID will be `app.twoof.us` (or chosen variant).
+- **Link the GitHub repo to a new Vercel project** when `twoof.us` is registered — Vercel auto-detects `vercel.json` and uses `npm run build:vercel`. Custom domain → `twoof.us`.
 
 ## Phase 2 deploy state (as of 2026-05-12)
 
